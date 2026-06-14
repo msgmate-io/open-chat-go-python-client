@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-# pip install git+https://github.com/msgmate-io/open-chat-go#subdirectory=oc_client_mvp
+# pip install git+https://github.com/msgmate-io/open-chat-go-python-client.git
 
 setup(
     name="oc_client_mvp",
