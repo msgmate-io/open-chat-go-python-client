@@ -18,6 +18,9 @@ Run the CLI:
 
 ```bash
 oc_client --host http://localhost:1984 --username admin --password password --message "hi"
+
+# or authenticate with an API token
+oc_client --host http://localhost:1984 --api-token ocat_xxx --message "hi"
 ```
 
 Use the integration test script in this repository:

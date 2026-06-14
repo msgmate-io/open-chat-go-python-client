@@ -16,13 +16,20 @@ DEFAULT_BOT_CONFIG = {
 
 
 class OpenChatPythonClient:
-    def __init__(self, host: str = "http://localhost:1984", username: str = "admin", password: str = "password"):
+    def __init__(self, host: str = "http://localhost:1984", username: str = "admin", password: str = "password", api_token: Optional[str] = None):
         self.host = host.rstrip("/")
         self.username = username
         self.password = password
+        self.api_token = api_token
         self.session = requests.Session()
         self.bot_config = dict(DEFAULT_BOT_CONFIG)
-        self._logged_in = False
+        self._logged_in = api_token is not None
+
+    def _headers(self) -> Dict[str, str]:
+        headers = {"Content-Type": "application/json", "Origin": self.host}
+        if self.api_token:
+            headers["Authorization"] = f"Bearer {self.api_token}"
+        return headers
 
     def setup_bot_config(self, bot_config: Dict[str, Any]) -> None:
         self.bot_config = dict(bot_config)
@@ -36,7 +43,7 @@ class OpenChatPythonClient:
         response = self.session.post(
             login_url,
             json={"email": self.username, "password": self.password},
-            headers={"Content-Type": "application/json", "Origin": self.host},
+            headers=self._headers(),
             timeout=20,
         )
         response.raise_for_status()
@@ -54,7 +61,7 @@ class OpenChatPythonClient:
     def get_user_self(self) -> Dict[str, Any]:
         response = self.session.get(
             f"{self.host}/api/v1/user/self",
-            headers={"Content-Type": "application/json", "Origin": self.host},
+            headers=self._headers(),
             timeout=20,
         )
         response.raise_for_status()
@@ -64,7 +71,7 @@ class OpenChatPythonClient:
         self.ensure_session_initialized()
         response = self.session.get(
             f"{self.host}/api/v1/contacts/list",
-            headers={"Content-Type": "application/json", "Origin": self.host},
+            headers=self._headers(),
             timeout=20,
         )
         response.raise_for_status()
@@ -92,7 +99,7 @@ class OpenChatPythonClient:
         response = self.session.post(
             f"{self.host}/api/v1/chats/create",
             json=payload,
-            headers={"Content-Type": "application/json", "Origin": self.host},
+            headers=self._headers(),
             timeout=30,
         )
         response.raise_for_status()
@@ -102,7 +109,7 @@ class OpenChatPythonClient:
         self.ensure_session_initialized()
         response = self.session.post(
             f"{self.host}/api/chat/{chat_uuid}/publish",
-            headers={"Content-Type": "application/json", "Origin": self.host},
+            headers=self._headers(),
             timeout=20,
         )
         response.raise_for_status()
@@ -121,11 +128,17 @@ def main() -> None:
     parser.add_argument("--host", default="http://localhost:1984")
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="password")
+    parser.add_argument("--api-token", default="")
     parser.add_argument("--message", default="Hello from oc_client_mvp")
     args = parser.parse_args()
 
-    client = OpenChatPythonClient(host=args.host, username=args.username, password=args.password)
-    user = client.login()
+    client = OpenChatPythonClient(
+        host=args.host,
+        username=args.username,
+        password=args.password,
+        api_token=(args.api_token or None),
+    )
+    user = client.get_user_self() if args.api_token else client.login()
     print(f"Logged in as: {user.get('name', 'unknown')}")
     chat = client.create_interaction(message=args.message)
     print(f"Created interaction chat: {chat.get('uuid', '<unknown>')}")
