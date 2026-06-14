@@ -7,9 +7,9 @@ import requests
 DEFAULT_BOT_CONFIG = {
     "temperature": 0.7,
     "max_tokens": 4096,
-    "model": "o3-mini-2025-01-31",
-    "endpoint": "https://api.openai.com/v1/",
-    "backend": "openai",
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "endpoint": "https://api.deepinfra.com/v1/openai",
+    "backend": "deepinfra",
     "context": 10,
     "system_prompt": "You are a helpful assistant.",
 }
