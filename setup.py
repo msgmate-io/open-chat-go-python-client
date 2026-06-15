@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 # pip install git+https://github.com/msgmate-io/open-chat-go-python-client.git
 
 setup(
-    name="oc_client_mvp",
+    name="open_chat_client_python",
     version="0.1",
     packages=find_packages(),
     python_requires=">=3.8, <4",
@@ -11,6 +11,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
+            "open_chat_client_python=client.client:main",
             "oc_client=client.client:main",
         ],
     },

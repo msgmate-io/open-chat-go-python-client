@@ -129,7 +129,7 @@ def main() -> None:
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", default="password")
     parser.add_argument("--api-token", default="")
-    parser.add_argument("--message", default="Hello from oc_client_mvp")
+    parser.add_argument("--message", default="Hello from open_chat_client_python")
     args = parser.parse_args()
 
     client = OpenChatPythonClient(
