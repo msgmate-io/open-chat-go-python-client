@@ -1,4 +1,6 @@
 import argparse
+import json
+import time
 from typing import Any, Dict, Optional
 
 import requests
@@ -90,6 +92,7 @@ class OpenChatPythonClient:
         payload = {
             "contact_token": default_bot["contact_token"],
             "first_message": message,
+            "chat_type": "interaction",
             "shared_config": {
                 **self.bot_config,
                 "tool_init": tool_init or {},
@@ -104,6 +107,93 @@ class OpenChatPythonClient:
         )
         response.raise_for_status()
         return response.json()
+
+    def list_interaction_messages(self, chat_uuid: str, page: int = 1, limit: int = 40) -> Dict[str, Any]:
+        self.ensure_session_initialized()
+        response = self.session.get(
+            f"{self.host}/api/v1/chats/{chat_uuid}/messages/list",
+            params={"page": page, "limit": limit},
+            headers=self._headers(),
+            timeout=20,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_interaction_confirmation_list(self, chat_uuid: str, wait_seconds: int = 0, poll_interval: float = 0.5) -> list[Dict[str, Any]]:
+        deadline = time.time() + max(wait_seconds, 0)
+        confirmations: list[Dict[str, Any]] = []
+
+        while True:
+            payload = self.list_interaction_messages(chat_uuid=chat_uuid, page=1, limit=100)
+            rows = payload.get("rows", []) if isinstance(payload, dict) else []
+            confirmations = []
+            action_by_id: Dict[str, Dict[str, Any]] = {}
+            for message in rows:
+                meta = message.get("meta_data") if isinstance(message, dict) else None
+                if not isinstance(meta, dict):
+                    meta = {}
+
+                actions = meta.get("confirmable_actions")
+                if isinstance(actions, list):
+                    for action in actions:
+                        if isinstance(action, dict):
+                            action_id = str(action.get("action_id", "")).strip()
+                            if action_id:
+                                action_by_id[action_id] = dict(action)
+                            else:
+                                confirmations.append(dict(action))
+
+                tool_calls = message.get("tool_calls") if isinstance(message, dict) else None
+                if not isinstance(tool_calls, list):
+                    continue
+
+                for tool_call in tool_calls:
+                    if not isinstance(tool_call, dict):
+                        continue
+                    action_id = str(tool_call.get("id", "")).strip()
+                    if not action_id:
+                        continue
+
+                    base = action_by_id.get(action_id, {"action_id": action_id})
+                    merged = dict(base)
+
+                    confirmation_meta = tool_call.get("confirmation")
+                    if isinstance(confirmation_meta, dict):
+                        tool_input = confirmation_meta.get("tool_input")
+                        if isinstance(tool_input, dict):
+                            merged["tool_input"] = dict(tool_input)
+                        tool_name = confirmation_meta.get("tool_name")
+                        if isinstance(tool_name, str) and tool_name:
+                            merged["source_tool_name"] = tool_name
+
+                    args = tool_call.get("arguments")
+                    if isinstance(args, dict):
+                        merged["tool_call_arguments"] = dict(args)
+
+                    suggested_inputs = None
+                    tool_input = merged.get("tool_input")
+                    if isinstance(tool_input, dict):
+                        suggested_inputs = tool_input.get("suggested_inputs")
+                    if suggested_inputs is None and isinstance(args, dict):
+                        suggested_inputs = args.get("suggested_inputs")
+
+                    if isinstance(suggested_inputs, str):
+                        raw = suggested_inputs.strip()
+                        if raw:
+                            try:
+                                merged["suggested_inputs"] = json.loads(raw)
+                            except json.JSONDecodeError:
+                                merged["suggested_inputs"] = raw
+                    elif suggested_inputs is not None:
+                        merged["suggested_inputs"] = suggested_inputs
+
+                    action_by_id[action_id] = merged
+
+            confirmations.extend(action_by_id.values())
+
+            if confirmations or time.time() >= deadline:
+                return confirmations
+            time.sleep(max(poll_interval, 0.1))
 
     def publish_chat(self, chat_uuid: str) -> Dict[str, Any]:
         self.ensure_session_initialized()
