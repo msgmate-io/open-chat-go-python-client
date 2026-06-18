@@ -26,6 +26,7 @@ class OpenChatPythonClient:
         self.session = requests.Session()
         self.bot_config = dict(DEFAULT_BOT_CONFIG)
         self._logged_in = api_token is not None
+        self._last_chat_uuid: Optional[str] = None
 
     def _headers(self) -> Dict[str, str]:
         headers = {"Content-Type": "application/json", "Origin": self.host}
@@ -106,7 +107,51 @@ class OpenChatPythonClient:
             timeout=30,
         )
         response.raise_for_status()
-        return response.json()
+        created = response.json()
+        chat_uuid = created.get("uuid") if isinstance(created, dict) else None
+        if isinstance(chat_uuid, str) and chat_uuid:
+            self._last_chat_uuid = chat_uuid
+        return created
+
+    def interaction_wait_for_stop_signal(self, chat_uuid: Optional[str] = None, wait_seconds: int = 20, poll_interval: float = 0.5, quiet_seconds: float = 3.0) -> Dict[str, Any]:
+        target_chat_uuid = chat_uuid or self._last_chat_uuid
+        if not target_chat_uuid:
+            raise ValueError("chat_uuid is required when no interaction has been created yet")
+
+        deadline = time.time() + max(wait_seconds, 0)
+        last_signature = ""
+        last_change_at = time.time()
+        latest_row: Dict[str, Any] = {}
+        while True:
+            payload = self.list_interaction_messages(chat_uuid=target_chat_uuid, page=1, limit=100)
+            rows = payload.get("rows", []) if isinstance(payload, dict) else []
+
+            signature_parts = []
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                latest_row = row
+                signature_parts.append(f"{row.get('uuid','')}|{row.get('send_at','')}|{row.get('text','')}")
+                meta = row.get("meta_data")
+                if isinstance(meta, dict) and meta.get("finished") is True:
+                    return row
+
+            signature = "\n".join(signature_parts)
+            now = time.time()
+            if signature != last_signature:
+                last_signature = signature
+                last_change_at = now
+            elif now - last_change_at >= max(quiet_seconds, 0.5):
+                return {
+                    "chat_uuid": target_chat_uuid,
+                    "signal": "inferred_stop",
+                    "reason": f"no message updates for {quiet_seconds:.1f}s",
+                    "latest_message_uuid": latest_row.get("uuid") if latest_row else None,
+                }
+
+            if time.time() >= deadline:
+                raise TimeoutError(f"interaction did not emit a stop signal within {wait_seconds}s")
+            time.sleep(max(poll_interval, 0.1))
 
     def list_interaction_messages(self, chat_uuid: str, page: int = 1, limit: int = 40) -> Dict[str, Any]:
         self.ensure_session_initialized()
