@@ -164,7 +164,7 @@ class OpenChatPythonClient:
         response.raise_for_status()
         return response.json()
 
-    def get_interaction_confirmation_list(self, chat_uuid: str, wait_seconds: int = 0, poll_interval: float = 0.5) -> list[Dict[str, Any]]:
+    def get_interaction_confirmation_list(self, chat_uuid: str, wait_seconds: int = 10, poll_interval: float = 0.5) -> list[Dict[str, Any]]:
         deadline = time.time() + max(wait_seconds, 0)
         confirmations: list[Dict[str, Any]] = []
 
@@ -173,10 +173,13 @@ class OpenChatPythonClient:
             rows = payload.get("rows", []) if isinstance(payload, dict) else []
             confirmations = []
             action_by_id: Dict[str, Dict[str, Any]] = {}
+            has_finished_message = False
             for message in rows:
                 meta = message.get("meta_data") if isinstance(message, dict) else None
                 if not isinstance(meta, dict):
                     meta = {}
+                if meta.get("finished") is True:
+                    has_finished_message = True
 
                 actions = meta.get("confirmable_actions")
                 if isinstance(actions, list):
@@ -236,7 +239,9 @@ class OpenChatPythonClient:
 
             confirmations.extend(action_by_id.values())
 
-            if confirmations or time.time() >= deadline:
+            if confirmations:
+                return confirmations
+            if has_finished_message or time.time() >= deadline:
                 return confirmations
             time.sleep(max(poll_interval, 0.1))
 
