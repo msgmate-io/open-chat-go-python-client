@@ -164,6 +164,17 @@ class OpenChatPythonClient:
         response.raise_for_status()
         return response.json()
 
+    def get_interactions(self, page: int = 1, limit: int = 40) -> Dict[str, Any]:
+        self.ensure_session_initialized()
+        response = self.session.get(
+            f"{self.host}/api/v1/chats/list",
+            params={"page": page, "limit": limit, "chat_types": "interaction"},
+            headers=self._headers(),
+            timeout=20,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def get_interaction_confirmation_list(self, chat_uuid: str, wait_seconds: int = 10, poll_interval: float = 0.5) -> list[Dict[str, Any]]:
         deadline = time.time() + max(wait_seconds, 0)
         confirmations: list[Dict[str, Any]] = []

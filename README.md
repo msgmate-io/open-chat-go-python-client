@@ -43,3 +43,14 @@ Use the integration test script in this repository:
 ```bash
 python development/scripts/test_client.py
 ```
+
+Python API example:
+
+```python
+from client.client import OpenChatPythonClient
+
+client = OpenChatPythonClient(host="http://localhost:1984", username="admin", password="password")
+client.login()
+interactions = client.get_interactions(page=1, limit=40)
+print(interactions["rows"])
+```
