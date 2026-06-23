@@ -2,6 +2,7 @@ import argparse
 import json
 import time
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
 import requests
 
@@ -189,8 +190,16 @@ class OpenChatPythonClient:
         response.raise_for_status()
         return response.json()
 
-    def get_interactions(self, page: int = 1, limit: int = 40) -> Dict[str, Any]:
-        """List chats filtered to interactions via `chat_types=interaction`."""
+    def get_interactions(self, page: int = 1, limit: int = 40, all_pages: bool = True) -> Dict[str, Any]:
+        """List chats filtered to interactions via `chat_types=interaction`.
+
+        By default this fetches all pages and returns a merged `rows` list.
+
+        Args:
+            page: First page to fetch.
+            limit: Page size for each request.
+            all_pages: When true, continue fetching until `total_pages` is reached.
+        """
         self.ensure_session_initialized()
         response = self.session.get(
             f"{self.host}/api/v1/chats/list",
@@ -199,7 +208,31 @@ class OpenChatPythonClient:
             timeout=20,
         )
         response.raise_for_status()
-        return response.json()
+        payload = response.json()
+        if not all_pages or not isinstance(payload, dict):
+            return payload
+
+        rows = payload.get("rows")
+        total_pages = payload.get("total_pages")
+        if not isinstance(rows, list) or not isinstance(total_pages, int) or total_pages <= page:
+            return payload
+
+        merged_rows = list(rows)
+        for next_page in range(page + 1, total_pages + 1):
+            next_response = self.session.get(
+                f"{self.host}/api/v1/chats/list",
+                params={"page": next_page, "limit": limit, "chat_types": "interaction"},
+                headers=self._headers(),
+                timeout=20,
+            )
+            next_response.raise_for_status()
+            next_payload = next_response.json()
+            next_rows = next_payload.get("rows") if isinstance(next_payload, dict) else None
+            if isinstance(next_rows, list):
+                merged_rows.extend(next_rows)
+
+        payload["rows"] = merged_rows
+        return payload
 
     def get_interaction(self, chat_uuid: str, include_share_info: bool = False) -> Dict[str, Any]:
         """Fetch a single interaction chat and return detail-friendly payload.
@@ -337,6 +370,60 @@ class OpenChatPythonClient:
         if not share_uuid:
             raise RuntimeError("publish endpoint did not return chat_share_uuid")
         return f"{self.host}/interaction/{share_uuid}"
+
+    def listen_shared_interaction_stream(self, chat_share_uuid: str, timeout_seconds: float = 30.0, max_events: Optional[int] = None) -> list[Dict[str, Any]]:
+        """Listen to shared interaction websocket events and return received payloads.
+
+        Args:
+            chat_share_uuid: Public shared interaction UUID.
+            timeout_seconds: Socket timeout used for connect and receive operations.
+            max_events: Optional upper bound for received event count.
+        """
+        try:
+            from websocket import create_connection  # type: ignore
+        except ModuleNotFoundError as exc:
+            raise RuntimeError("websocket-client is required for websocket streaming. Install with: pip install websocket-client") from exc
+
+        parsed_host = urlparse(self.host)
+        if not parsed_host.netloc:
+            raise ValueError(f"invalid host: {self.host}")
+        ws_scheme = "wss" if parsed_host.scheme == "https" else "ws"
+        ws_url = f"{ws_scheme}://{parsed_host.netloc}/ws/interaction/{chat_share_uuid}"
+
+        headers = []
+        if self.api_token:
+            headers.append(f"Authorization: Bearer {self.api_token}")
+        else:
+            self.ensure_session_initialized()
+        cookie_dict = self.session.cookies.get_dict()
+        if cookie_dict:
+            cookie_header = "; ".join(f"{key}={value}" for key, value in cookie_dict.items())
+            headers.append(f"Cookie: {cookie_header}")
+
+        events: list[Dict[str, Any]] = []
+        ws = create_connection(ws_url, timeout=timeout_seconds, header=headers)
+        try:
+            ws.settimeout(timeout_seconds)
+            while True:
+                if max_events is not None and max_events > 0 and len(events) >= max_events:
+                    break
+                raw_event = ws.recv()
+                if not raw_event:
+                    continue
+                try:
+                    parsed_event = json.loads(raw_event)
+                except json.JSONDecodeError:
+                    parsed_event = {"type": "raw", "raw": str(raw_event)}
+                if isinstance(parsed_event, dict):
+                    events.append(parsed_event)
+                else:
+                    events.append({"type": "raw", "raw": parsed_event})
+        except Exception:
+            pass
+        finally:
+            ws.close()
+
+        return events
 
 
 def main() -> None:

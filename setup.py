@@ -8,6 +8,7 @@ setup(
     python_requires=">=3.8, <4",
     install_requires=[
         "requests",
+        "websocket-client",
     ],
     entry_points={
         "console_scripts": [
