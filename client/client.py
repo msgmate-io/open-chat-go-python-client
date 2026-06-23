@@ -206,13 +206,14 @@ class OpenChatPythonClient:
 
         Uses `/api/v1/chats/{chat_uuid}` and augments the response with an
         `interaction_details` object (model/backend/tools/runtime keys) similar
-        to what the frontend interaction details panel displays.
+        to what the frontend interaction details panel displays. If the chat has
+        already been published, backend response fields `chat_share_uuid` and
+        `shared_interaction_url` are included.
 
         Args:
             chat_uuid: Chat UUID to retrieve.
-            include_share_info: When true, also resolves sharing info by calling
-                the publish endpoint and adds `chat_share_uuid` and
-                `shared_interaction_url`.
+            include_share_info: Backward-compatible argument; share info is now
+                returned directly by `/api/v1/chats/{chat_uuid}` when available.
         """
         self.ensure_session_initialized()
         response = self.session.get(
@@ -233,13 +234,6 @@ class OpenChatPythonClient:
                 if key in config:
                     interaction_details[key] = config[key]
         payload["interaction_details"] = interaction_details
-
-        if include_share_info:
-            publish_data = self.publish_chat(chat_uuid)
-            share_uuid = publish_data.get("chat_share_uuid") if isinstance(publish_data, dict) else None
-            if isinstance(share_uuid, str) and share_uuid:
-                payload["chat_share_uuid"] = share_uuid
-                payload["shared_interaction_url"] = f"{self.host}/interaction/{share_uuid}"
 
         return payload
 
