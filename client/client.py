@@ -19,6 +19,14 @@ DEFAULT_BOT_CONFIG = {
 
 class OpenChatPythonClient:
     def __init__(self, host: str = "http://localhost:1984", username: str = "admin", password: str = "password", api_token: Optional[str] = None):
+        """Create a client session for Open Chat APIs.
+
+        Args:
+            host: Base URL of the Open Chat backend.
+            username: Username/email used for cookie-based login.
+            password: Password used for cookie-based login.
+            api_token: Optional bearer token; when set, login is skipped.
+        """
         self.host = host.rstrip("/")
         self.username = username
         self.password = password
@@ -35,9 +43,11 @@ class OpenChatPythonClient:
         return headers
 
     def setup_bot_config(self, bot_config: Dict[str, Any]) -> None:
+        """Override the default bot configuration used for new interactions."""
         self.bot_config = dict(bot_config)
 
     def login(self) -> Dict[str, Any]:
+        """Authenticate with username/password and return the current user payload."""
         if self._logged_in:
             return self.get_user_self()
 
@@ -58,10 +68,12 @@ class OpenChatPythonClient:
         return self.get_user_self()
 
     def ensure_session_initialized(self) -> None:
+        """Ensure authentication is available before calling protected endpoints."""
         if not self._logged_in:
             self.login()
 
     def get_user_self(self) -> Dict[str, Any]:
+        """Fetch the authenticated user profile from `/api/v1/user/self`."""
         response = self.session.get(
             f"{self.host}/api/v1/user/self",
             headers=self._headers(),
@@ -71,6 +83,7 @@ class OpenChatPythonClient:
         return response.json()
 
     def retrieve_default_bot(self) -> Optional[Dict[str, Any]]:
+        """Return the default `bot` contact entry, if available."""
         self.ensure_session_initialized()
         response = self.session.get(
             f"{self.host}/api/v1/contacts/list",
@@ -85,6 +98,12 @@ class OpenChatPythonClient:
         return None
 
     def create_interaction(self, tool_init: Optional[Dict[str, Any]] = None, message: str = "") -> Dict[str, Any]:
+        """Create an interaction chat with the default bot contact.
+
+        Args:
+            tool_init: Optional initialization payload for interaction tools.
+            message: Optional first message sent when creating the interaction.
+        """
         self.ensure_session_initialized()
         default_bot = self.retrieve_default_bot()
         if not default_bot:
@@ -114,6 +133,11 @@ class OpenChatPythonClient:
         return created
 
     def interaction_wait_for_stop_signal(self, chat_uuid: Optional[str] = None, wait_seconds: int = 20, poll_interval: float = 0.5, quiet_seconds: float = 3.0) -> Dict[str, Any]:
+        """Poll interaction messages until finished or idle.
+
+        Returns the message with `meta_data.finished == true` when present.
+        If no updates occur for `quiet_seconds`, returns an inferred stop payload.
+        """
         target_chat_uuid = chat_uuid or self._last_chat_uuid
         if not target_chat_uuid:
             raise ValueError("chat_uuid is required when no interaction has been created yet")
@@ -154,6 +178,7 @@ class OpenChatPythonClient:
             time.sleep(max(poll_interval, 0.1))
 
     def list_interaction_messages(self, chat_uuid: str, page: int = 1, limit: int = 40) -> Dict[str, Any]:
+        """List messages for an interaction chat using paginated backend API."""
         self.ensure_session_initialized()
         response = self.session.get(
             f"{self.host}/api/v1/chats/{chat_uuid}/messages/list",
@@ -165,6 +190,7 @@ class OpenChatPythonClient:
         return response.json()
 
     def get_interactions(self, page: int = 1, limit: int = 40) -> Dict[str, Any]:
+        """List chats filtered to interactions via `chat_types=interaction`."""
         self.ensure_session_initialized()
         response = self.session.get(
             f"{self.host}/api/v1/chats/list",
@@ -175,7 +201,50 @@ class OpenChatPythonClient:
         response.raise_for_status()
         return response.json()
 
+    def get_interaction(self, chat_uuid: str, include_share_info: bool = False) -> Dict[str, Any]:
+        """Fetch a single interaction chat and return detail-friendly payload.
+
+        Uses `/api/v1/chats/{chat_uuid}` and augments the response with an
+        `interaction_details` object (model/backend/tools/runtime keys) similar
+        to what the frontend interaction details panel displays.
+
+        Args:
+            chat_uuid: Chat UUID to retrieve.
+            include_share_info: When true, also resolves sharing info by calling
+                the publish endpoint and adds `chat_share_uuid` and
+                `shared_interaction_url`.
+        """
+        self.ensure_session_initialized()
+        response = self.session.get(
+            f"{self.host}/api/v1/chats/{chat_uuid}",
+            headers=self._headers(),
+            timeout=20,
+        )
+        response.raise_for_status()
+        payload = response.json()
+
+        if not isinstance(payload, dict):
+            return payload
+
+        config = payload.get("config")
+        interaction_details: Dict[str, Any] = {}
+        if isinstance(config, dict):
+            for key in ("model", "backend", "max_tokens", "temperature", "context", "tools", "tool_init", "system_prompt"):
+                if key in config:
+                    interaction_details[key] = config[key]
+        payload["interaction_details"] = interaction_details
+
+        if include_share_info:
+            publish_data = self.publish_chat(chat_uuid)
+            share_uuid = publish_data.get("chat_share_uuid") if isinstance(publish_data, dict) else None
+            if isinstance(share_uuid, str) and share_uuid:
+                payload["chat_share_uuid"] = share_uuid
+                payload["shared_interaction_url"] = f"{self.host}/interaction/{share_uuid}"
+
+        return payload
+
     def get_interaction_confirmation_list(self, chat_uuid: str, wait_seconds: int = 10, poll_interval: float = 0.5) -> list[Dict[str, Any]]:
+        """Collect pending confirmable actions inferred from interaction messages."""
         deadline = time.time() + max(wait_seconds, 0)
         confirmations: list[Dict[str, Any]] = []
 
@@ -257,6 +326,7 @@ class OpenChatPythonClient:
             time.sleep(max(poll_interval, 0.1))
 
     def publish_chat(self, chat_uuid: str) -> Dict[str, Any]:
+        """Publish a chat and return the backend publish payload."""
         self.ensure_session_initialized()
         response = self.session.post(
             f"{self.host}/api/chat/{chat_uuid}/publish",
@@ -267,6 +337,7 @@ class OpenChatPythonClient:
         return response.json()
 
     def get_shared_interaction_url(self, chat_uuid: str) -> str:
+        """Publish an interaction chat and return its public share URL."""
         publish_data = self.publish_chat(chat_uuid)
         share_uuid = publish_data.get("chat_share_uuid")
         if not share_uuid:
