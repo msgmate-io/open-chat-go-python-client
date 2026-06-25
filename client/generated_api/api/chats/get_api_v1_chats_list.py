@@ -8,7 +8,7 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.database_pagination import DatabasePagination
+from ...models.chats_listed_chats_page import ChatsListedChatsPage
 from ...types import UNSET, Unset
 from typing import cast
 
@@ -48,9 +48,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DatabasePagination | str | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ChatsListedChatsPage | str | None:
     if response.status_code == 200:
-        response_200 = DatabasePagination.from_dict(response.json())
+        response_200 = ChatsListedChatsPage.from_dict(response.json())
 
 
 
@@ -70,7 +70,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DatabasePagination | str]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ChatsListedChatsPage | str]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -86,7 +86,7 @@ def sync_detailed(
     limit: int | Unset = 40,
     chat_types: str | Unset = UNSET,
 
-) -> Response[DatabasePagination | str]:
+) -> Response[ChatsListedChatsPage | str]:
     """ Get user chats
 
      Retrieve a list of chats for the authenticated user
@@ -101,7 +101,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DatabasePagination | str]
+        Response[ChatsListedChatsPage | str]
      """
 
 
@@ -125,7 +125,7 @@ def sync(
     limit: int | Unset = 40,
     chat_types: str | Unset = UNSET,
 
-) -> DatabasePagination | str | None:
+) -> ChatsListedChatsPage | str | None:
     """ Get user chats
 
      Retrieve a list of chats for the authenticated user
@@ -140,7 +140,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DatabasePagination | str
+        ChatsListedChatsPage | str
      """
 
 
@@ -159,7 +159,7 @@ async def asyncio_detailed(
     limit: int | Unset = 40,
     chat_types: str | Unset = UNSET,
 
-) -> Response[DatabasePagination | str]:
+) -> Response[ChatsListedChatsPage | str]:
     """ Get user chats
 
      Retrieve a list of chats for the authenticated user
@@ -174,7 +174,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DatabasePagination | str]
+        Response[ChatsListedChatsPage | str]
      """
 
 
@@ -198,7 +198,7 @@ async def asyncio(
     limit: int | Unset = 40,
     chat_types: str | Unset = UNSET,
 
-) -> DatabasePagination | str | None:
+) -> ChatsListedChatsPage | str | None:
     """ Get user chats
 
      Retrieve a list of chats for the authenticated user
@@ -213,7 +213,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DatabasePagination | str
+        ChatsListedChatsPage | str
      """
 
 

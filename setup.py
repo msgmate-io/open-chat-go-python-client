@@ -9,7 +9,6 @@ setup(
     install_requires=[
         "attrs>=22.2.0",
         "httpx>=0.28,<0.29",
-        "requests",
         "websocket-client",
     ],
     entry_points={

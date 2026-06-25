@@ -12,29 +12,29 @@ from ..types import UNSET, Unset
 from typing import cast
 
 if TYPE_CHECKING:
-  from ..models.contacts_listed_contact import ContactsListedContact
+  from ..models.chats_listed_chat import ChatsListedChat
 
 
 
 
 
-T = TypeVar("T", bound="ContactsPaginatedContacts")
+T = TypeVar("T", bound="ChatsListedChatsPage")
 
 
 
 @_attrs_define
-class ContactsPaginatedContacts:
+class ChatsListedChatsPage:
     """ 
         Attributes:
             limit (int | Unset):
             page (int | Unset):
-            rows (list[ContactsListedContact] | Unset):
+            rows (list[ChatsListedChat] | Unset):
             total_pages (int | Unset):
      """
 
     limit: int | Unset = UNSET
     page: int | Unset = UNSET
-    rows: list[ContactsListedContact] | Unset = UNSET
+    rows: list[ChatsListedChat] | Unset = UNSET
     total_pages: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -43,7 +43,7 @@ class ContactsPaginatedContacts:
 
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.contacts_listed_contact import ContactsListedContact
+        from ..models.chats_listed_chat import ChatsListedChat
         limit = self.limit
 
         page = self.page
@@ -79,18 +79,18 @@ class ContactsPaginatedContacts:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.contacts_listed_contact import ContactsListedContact
+        from ..models.chats_listed_chat import ChatsListedChat
         d = dict(src_dict)
         limit = d.pop("limit", UNSET)
 
         page = d.pop("page", UNSET)
 
         _rows = d.pop("rows", UNSET)
-        rows: list[ContactsListedContact] | Unset = UNSET
+        rows: list[ChatsListedChat] | Unset = UNSET
         if _rows is not UNSET:
             rows = []
             for rows_item_data in _rows:
-                rows_item = ContactsListedContact.from_dict(rows_item_data)
+                rows_item = ChatsListedChat.from_dict(rows_item_data)
 
 
 
@@ -99,7 +99,7 @@ class ContactsPaginatedContacts:
 
         total_pages = d.pop("total_pages", UNSET)
 
-        contacts_paginated_contacts = cls(
+        chats_listed_chats_page = cls(
             limit=limit,
             page=page,
             rows=rows,
@@ -107,8 +107,8 @@ class ContactsPaginatedContacts:
         )
 
 
-        contacts_paginated_contacts.additional_properties = d
-        return contacts_paginated_contacts
+        chats_listed_chats_page.additional_properties = d
+        return chats_listed_chats_page
 
     @property
     def additional_keys(self) -> list[str]:

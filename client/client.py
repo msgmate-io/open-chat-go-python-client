@@ -1,11 +1,9 @@
 import argparse
 import json
 import time
+from dataclasses import dataclass
 from typing import Any, Optional
 from urllib.parse import urlparse
-
-import httpx
-import requests
 
 from .generated_api import Client as GeneratedClient
 from .generated_api.api.chats import (
@@ -19,10 +17,20 @@ from .generated_api.api.messages import get_api_v1_chats_chat_uuid_messages_list
 from .generated_api.api.user import post_api_v1_user_login
 from .generated_api.api.users import get_api_v1_user_self
 from .generated_api.models.chats_create_chat import ChatsCreateChat
+from .generated_api.models.chats_create_chat_shared_config import ChatsCreateChatSharedConfig
+from .generated_api.models.chats_listed_chat import ChatsListedChat
+from .generated_api.models.chats_listed_chats_page import ChatsListedChatsPage
+from .generated_api.models.chats_listed_message import ChatsListedMessage
+from .generated_api.models.chats_listed_messages_page import ChatsListedMessagesPage
+from .generated_api.models.chats_shared_chat_publish_response import ChatsSharedChatPublishResponse
+from .generated_api.models.contacts_listed_contact import ContactsListedContact
+from .generated_api.models.contacts_paginated_contacts import ContactsPaginatedContacts
+from .generated_api.models.database_user import DatabaseUser
 from .generated_api.models.user_user_login import UserUserLogin
+from .generated_api.types import UNSET, Unset
 
 
-DEFAULT_BOT_CONFIG = {
+DEFAULT_BOT_CONFIG: dict[str, Any] = {
     "temperature": 0.7,
     "max_tokens": 4096,
     "model": "qwen3-8b-instruct_vllm",
@@ -33,15 +41,32 @@ DEFAULT_BOT_CONFIG = {
 }
 
 
-def _as_dict(value: Any) -> dict[str, Any]:
-    if isinstance(value, dict):
-        return value
-    to_dict = getattr(value, "to_dict", None)
-    if callable(to_dict):
-        parsed = to_dict()
-        if isinstance(parsed, dict):
-            return parsed
-    raise RuntimeError(f"cannot convert value to dict: {type(value)!r}")
+@dataclass
+class InteractionStopSignal:
+    chat_uuid: str
+    reason: str
+    latest_message_uuid: str | None = None
+
+
+@dataclass
+class InteractionConfirmation:
+    action_id: str
+    source_tool_name: str | None = None
+    tool_input: dict[str, Any] | None = None
+    tool_call_arguments: dict[str, Any] | None = None
+    suggested_inputs: Any = None
+
+
+def _is_unset(value: Any) -> bool:
+    return isinstance(value, Unset)
+
+
+def _expect_ok(parsed: Any, status_code: int, context: str) -> Any:
+    if status_code >= 400:
+        raise RuntimeError(f"{context} failed with status {status_code}")
+    if parsed is None or isinstance(parsed, str):
+        raise RuntimeError(f"{context} failed with unexpected payload type {type(parsed)!r}")
+    return parsed
 
 
 class OpenChatPythonClient:
@@ -56,65 +81,38 @@ class OpenChatPythonClient:
         self.username = username
         self.password = password
         self.api_token = api_token
-        self.session = requests.Session()
         self.bot_config = dict(DEFAULT_BOT_CONFIG)
         self._logged_in = api_token is not None
         self._last_chat_uuid: Optional[str] = None
 
+        headers = {"Content-Type": "application/json", "Origin": self.host}
+        if api_token:
+            headers["Authorization"] = f"Bearer {api_token}"
+
         self._api_client = GeneratedClient(
             base_url=self.host,
-            headers=self._headers(),
-            timeout=httpx.Timeout(30.0),
+            headers=headers,
             follow_redirects=True,
             raise_on_unexpected_status=False,
         )
-
-    def _headers(self) -> dict[str, str]:
-        headers = {"Content-Type": "application/json", "Origin": self.host}
-        if self.api_token:
-            headers["Authorization"] = f"Bearer {self.api_token}"
-        return headers
-
-    def _sync_requests_to_httpx(self) -> None:
-        httpx_client = self._api_client.get_httpx_client()
-        httpx_client.cookies.clear()
-        for name, value in self.session.cookies.get_dict().items():
-            httpx_client.cookies.set(name, value)
-
-    def _sync_httpx_to_requests(self) -> None:
-        httpx_client = self._api_client.get_httpx_client()
-        for cookie in httpx_client.cookies.jar:
-            self.session.cookies.set(cookie.name, cookie.value, domain=cookie.domain, path=cookie.path)
 
     def _cookie_domain(self) -> str:
         parsed = urlparse(self.host)
         return parsed.hostname or ""
 
-    def _raw_get(self, path: str, params: Optional[dict[str, Any]] = None) -> dict[str, Any]:
-        response = self.session.get(f"{self.host}{path}", params=params, headers=self._headers(), timeout=30)
-        response.raise_for_status()
-        payload = response.json()
-        if not isinstance(payload, dict):
-            raise RuntimeError(f"expected JSON object from {path}")
-        return payload
-
     def setup_bot_config(self, bot_config: dict[str, Any]) -> None:
         self.bot_config = dict(bot_config)
 
-    def login(self) -> dict[str, Any]:
+    def login(self) -> DatabaseUser:
         if self._logged_in:
             return self.get_user_self()
 
-        self._sync_requests_to_httpx()
         response = post_api_v1_user_login.sync_detailed(
             client=self._api_client,
             body=UserUserLogin(email=self.username, password=self.password),
             cookie_domain=self._cookie_domain(),
         )
-        self._sync_httpx_to_requests()
-        if response.status_code >= 400:
-            raise requests.RequestException(f"login failed: {response.status_code} {response.content!r}")
-
+        _expect_ok(response.parsed, int(response.status_code), "login")
         self._logged_in = True
         return self.get_user_self()
 
@@ -122,59 +120,67 @@ class OpenChatPythonClient:
         if not self._logged_in:
             self.login()
 
-    def get_user_self(self) -> dict[str, Any]:
+    def get_user_self(self) -> DatabaseUser:
         self.ensure_session_initialized()
-        self._sync_requests_to_httpx()
         response = get_api_v1_user_self.sync_detailed(client=self._api_client)
-        self._sync_httpx_to_requests()
-        if response.status_code >= 400 or response.parsed is None or isinstance(response.parsed, str):
-            raise requests.RequestException(f"get_user_self failed: {response.status_code} {response.content!r}")
-        return _as_dict(response.parsed)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "get_user_self")
+        if not isinstance(parsed, DatabaseUser):
+            raise RuntimeError(f"get_user_self returned unexpected type: {type(parsed)!r}")
+        return parsed
 
-    def retrieve_default_bot(self) -> Optional[dict[str, Any]]:
+    def retrieve_default_bot(self) -> ContactsListedContact:
         self.ensure_session_initialized()
-        payload: dict[str, Any]
-        try:
-            self._sync_requests_to_httpx()
-            response = get_api_v1_contacts_list.sync_detailed(client=self._api_client, page=1, limit=200)
-            self._sync_httpx_to_requests()
-            if response.status_code >= 400 or response.parsed is None or isinstance(response.parsed, str):
-                raise requests.RequestException(f"contacts list failed: {response.status_code} {response.content!r}")
-            payload = _as_dict(response.parsed)
-        except Exception:
-            payload = self._raw_get("/api/v1/contacts/list", params={"page": 1, "limit": 200})
+        response = get_api_v1_contacts_list.sync_detailed(client=self._api_client, page=1, limit=200)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "retrieve_default_bot")
+        if not isinstance(parsed, ContactsPaginatedContacts):
+            raise RuntimeError(f"contacts/list returned unexpected type: {type(parsed)!r}")
 
-        rows = payload.get("rows", [])
-        if not isinstance(rows, list):
-            return None
+        rows = parsed.rows
+        if _is_unset(rows):
+            raise RuntimeError("contacts/list returned no rows")
+
         for row in rows:
-            if isinstance(row, dict) and row.get("name") == "bot":
+            if not _is_unset(row.name) and row.name == "bot":
                 return row
-        return None
+        raise RuntimeError("No default bot contact found")
 
-    def create_interaction(self, tool_init: Optional[dict[str, Any]] = None, message: str = "") -> dict[str, Any]:
+    def create_interaction(
+        self,
+        tool_init: Optional[dict[str, Any]] = None,
+        message: str = "",
+    ) -> ChatsListedChat:
         self.ensure_session_initialized()
         default_bot = self.retrieve_default_bot()
-        if not default_bot:
-            raise RuntimeError("No default bot contact found")
+        if _is_unset(default_bot.contact_token):
+            raise RuntimeError("default bot is missing contact_token")
 
+        shared_config = ChatsCreateChatSharedConfig.from_dict({**self.bot_config, "tool_init": tool_init or {}})
         body = ChatsCreateChat(
-            contact_token=str(default_bot["contact_token"]),
+            contact_token=default_bot.contact_token,
             first_message=message,
             chat_type="interaction",
-            shared_config={**self.bot_config, "tool_init": tool_init or {}},
+            shared_config=shared_config,
         )
-        self._sync_requests_to_httpx()
         response = post_api_v1_chats_create.sync_detailed(client=self._api_client, body=body)
-        self._sync_httpx_to_requests()
-        if response.status_code >= 400 or response.parsed is None or isinstance(response.parsed, str):
-            raise requests.RequestException(f"create_interaction failed: {response.status_code} {response.content!r}")
+        parsed = _expect_ok(response.parsed, int(response.status_code), "create_interaction")
+        if not isinstance(parsed, ChatsListedChat):
+            raise RuntimeError(f"create_interaction returned unexpected type: {type(parsed)!r}")
+        if not _is_unset(parsed.uuid):
+            self._last_chat_uuid = parsed.uuid
+        return parsed
 
-        created = _as_dict(response.parsed)
-        chat_uuid = created.get("uuid")
-        if isinstance(chat_uuid, str) and chat_uuid:
-            self._last_chat_uuid = chat_uuid
-        return created
+    def list_interaction_messages(self, chat_uuid: str, page: int = 1, limit: int = 40) -> ChatsListedMessagesPage:
+        self.ensure_session_initialized()
+        response = get_api_v1_chats_chat_uuid_messages_list.sync_detailed(
+            client=self._api_client,
+            chat_uuid=chat_uuid,
+            page=page,
+            limit=limit,
+        )
+        parsed = _expect_ok(response.parsed, int(response.status_code), "list_interaction_messages")
+        if not isinstance(parsed, ChatsListedMessagesPage):
+            raise RuntimeError(f"list_interaction_messages returned unexpected type: {type(parsed)!r}")
+        return parsed
 
     def interaction_wait_for_stop_signal(
         self,
@@ -182,7 +188,7 @@ class OpenChatPythonClient:
         wait_seconds: int = 20,
         poll_interval: float = 0.5,
         quiet_seconds: float = 3.0,
-    ) -> dict[str, Any]:
+    ) -> ChatsListedMessage | InteractionStopSignal:
         target_chat_uuid = chat_uuid or self._last_chat_uuid
         if not target_chat_uuid:
             raise ValueError("chat_uuid is required when no interaction has been created yet")
@@ -190,21 +196,24 @@ class OpenChatPythonClient:
         deadline = time.time() + max(wait_seconds, 0)
         last_signature = ""
         last_change_at = time.time()
-        latest_row: dict[str, Any] = {}
+        latest_row: ChatsListedMessage | None = None
 
         while True:
             payload = self.list_interaction_messages(chat_uuid=target_chat_uuid, page=1, limit=100)
-            rows = payload.get("rows", []) if isinstance(payload, dict) else []
+            rows = [] if _is_unset(payload.rows) else payload.rows
 
             signature_parts: list[str] = []
             for row in rows:
-                if not isinstance(row, dict):
-                    continue
                 latest_row = row
-                signature_parts.append(f"{row.get('uuid','')}|{row.get('send_at','')}|{row.get('text','')}")
-                meta = row.get("meta_data")
-                if isinstance(meta, dict) and meta.get("finished") is True:
-                    return row
+                row_uuid = "" if _is_unset(row.uuid) else row.uuid
+                row_send_at = "" if _is_unset(row.send_at) else row.send_at
+                row_text = "" if _is_unset(row.text) else row.text
+                signature_parts.append(f"{row_uuid}|{row_send_at}|{row_text}")
+
+                if not _is_unset(row.meta_data):
+                    finished = row.meta_data.additional_properties.get("finished")
+                    if finished is True:
+                        return row
 
             signature = "\n".join(signature_parts)
             now = time.time()
@@ -212,199 +221,176 @@ class OpenChatPythonClient:
                 last_signature = signature
                 last_change_at = now
             elif now - last_change_at >= max(quiet_seconds, 0.5):
-                return {
-                    "chat_uuid": target_chat_uuid,
-                    "signal": "inferred_stop",
-                    "reason": f"no message updates for {quiet_seconds:.1f}s",
-                    "latest_message_uuid": latest_row.get("uuid") if latest_row else None,
-                }
+                latest_uuid = None
+                if latest_row is not None and not _is_unset(latest_row.uuid):
+                    latest_uuid = latest_row.uuid
+                return InteractionStopSignal(
+                    chat_uuid=target_chat_uuid,
+                    reason=f"no message updates for {quiet_seconds:.1f}s",
+                    latest_message_uuid=latest_uuid,
+                )
 
             if time.time() >= deadline:
                 raise TimeoutError(f"interaction did not emit a stop signal within {wait_seconds}s")
             time.sleep(max(poll_interval, 0.1))
 
-    def list_interaction_messages(self, chat_uuid: str, page: int = 1, limit: int = 40) -> dict[str, Any]:
+    def get_interactions(self, page: int = 1, limit: int = 40, all_pages: bool = True) -> ChatsListedChatsPage:
         self.ensure_session_initialized()
-        self._sync_requests_to_httpx()
-        response = get_api_v1_chats_chat_uuid_messages_list.sync_detailed(
-            client=self._api_client,
-            chat_uuid=chat_uuid,
-            page=page,
-            limit=limit,
-        )
-        self._sync_httpx_to_requests()
-        if response.status_code >= 400 or response.parsed is None or isinstance(response.parsed, str):
-            raise requests.RequestException(f"list_interaction_messages failed: {response.status_code} {response.content!r}")
-        return _as_dict(response.parsed)
-
-    def get_interactions(self, page: int = 1, limit: int = 40, all_pages: bool = True) -> dict[str, Any]:
-        self.ensure_session_initialized()
-        self._sync_requests_to_httpx()
         response = get_api_v1_chats_list.sync_detailed(
             client=self._api_client,
             page=page,
             limit=limit,
             chat_types="interaction",
         )
-        self._sync_httpx_to_requests()
-        if response.status_code >= 400 or response.parsed is None or isinstance(response.parsed, str):
-            raise requests.RequestException(f"get_interactions failed: {response.status_code} {response.content!r}")
+        parsed = _expect_ok(response.parsed, int(response.status_code), "get_interactions")
+        if not isinstance(parsed, ChatsListedChatsPage):
+            raise RuntimeError(f"get_interactions returned unexpected type: {type(parsed)!r}")
 
-        payload = _as_dict(response.parsed)
-        if not all_pages:
-            return payload
+        if not all_pages or _is_unset(parsed.total_pages) or _is_unset(parsed.rows):
+            return parsed
 
-        rows = payload.get("rows")
-        total_pages = payload.get("total_pages")
-        if not isinstance(rows, list) or not isinstance(total_pages, int) or total_pages <= page:
-            return payload
+        total_pages = parsed.total_pages
+        if total_pages <= page:
+            return parsed
 
-        merged_rows = list(rows)
+        merged_rows = list(parsed.rows)
         for next_page in range(page + 1, total_pages + 1):
-            self._sync_requests_to_httpx()
             next_response = get_api_v1_chats_list.sync_detailed(
                 client=self._api_client,
                 page=next_page,
                 limit=limit,
                 chat_types="interaction",
             )
-            self._sync_httpx_to_requests()
-            if next_response.status_code >= 400 or next_response.parsed is None or isinstance(next_response.parsed, str):
-                break
-            next_payload = _as_dict(next_response.parsed)
-            next_rows = next_payload.get("rows")
-            if isinstance(next_rows, list):
-                merged_rows.extend(next_rows)
+            next_parsed = _expect_ok(next_response.parsed, int(next_response.status_code), "get_interactions page")
+            if not isinstance(next_parsed, ChatsListedChatsPage):
+                raise RuntimeError(f"get_interactions page returned unexpected type: {type(next_parsed)!r}")
+            if _is_unset(next_parsed.rows):
+                continue
+            merged_rows.extend(next_parsed.rows)
 
-        payload["rows"] = merged_rows
-        return payload
+        return ChatsListedChatsPage(
+            limit=parsed.limit,
+            page=parsed.page,
+            total_pages=parsed.total_pages,
+            rows=merged_rows,
+        )
 
-    def get_interaction(self, chat_uuid: str, include_share_info: bool = False) -> dict[str, Any]:
+    def get_interaction(self, chat_uuid: str) -> ChatsListedChat:
         self.ensure_session_initialized()
-        self._sync_requests_to_httpx()
         response = get_api_v1_chats_chat_uuid.sync_detailed(client=self._api_client, chat_uuid=chat_uuid)
-        self._sync_httpx_to_requests()
-        if response.status_code >= 400 or response.parsed is None or isinstance(response.parsed, str):
-            raise requests.RequestException(f"get_interaction failed: {response.status_code} {response.content!r}")
-
-        payload = _as_dict(response.parsed)
-        config = payload.get("config")
-        interaction_details: dict[str, Any] = {}
-        if isinstance(config, dict):
-            for key in (
-                "model",
-                "backend",
-                "max_tokens",
-                "temperature",
-                "context",
-                "tools",
-                "tool_init",
-                "system_prompt",
-            ):
-                if key in config:
-                    interaction_details[key] = config[key]
-        payload["interaction_details"] = interaction_details
-        return payload
+        parsed = _expect_ok(response.parsed, int(response.status_code), "get_interaction")
+        if not isinstance(parsed, ChatsListedChat):
+            raise RuntimeError(f"get_interaction returned unexpected type: {type(parsed)!r}")
+        return parsed
 
     def get_interaction_confirmation_list(
         self,
         chat_uuid: str,
         wait_seconds: int = 10,
         poll_interval: float = 0.5,
-    ) -> list[dict[str, Any]]:
+    ) -> list[InteractionConfirmation]:
         deadline = time.time() + max(wait_seconds, 0)
-        confirmations: list[dict[str, Any]] = []
 
         while True:
             payload = self.list_interaction_messages(chat_uuid=chat_uuid, page=1, limit=100)
-            rows = payload.get("rows", []) if isinstance(payload, dict) else []
-            confirmations = []
-            action_by_id: dict[str, dict[str, Any]] = {}
+            rows = [] if _is_unset(payload.rows) else payload.rows
+            action_by_id: dict[str, InteractionConfirmation] = {}
             has_finished_message = False
 
             for message in rows:
-                meta = message.get("meta_data") if isinstance(message, dict) else None
-                if not isinstance(meta, dict):
-                    meta = {}
-                if meta.get("finished") is True:
+                meta_data = {} if _is_unset(message.meta_data) else message.meta_data.additional_properties
+                if meta_data.get("finished") is True:
                     has_finished_message = True
 
-                actions = meta.get("confirmable_actions")
+                actions = meta_data.get("confirmable_actions")
                 if isinstance(actions, list):
                     for action in actions:
-                        if isinstance(action, dict):
-                            action_id = str(action.get("action_id", "")).strip()
-                            if action_id:
-                                action_by_id[action_id] = dict(action)
-                            else:
-                                confirmations.append(dict(action))
+                        if not isinstance(action, dict):
+                            continue
+                        action_id = str(action.get("action_id", "")).strip()
+                        if not action_id:
+                            continue
+                        action_by_id[action_id] = InteractionConfirmation(action_id=action_id)
 
-                tool_calls = message.get("tool_calls") if isinstance(message, dict) else None
-                if not isinstance(tool_calls, list):
+                if _is_unset(message.tool_calls):
                     continue
 
-                for tool_call in tool_calls:
+                for tool_call in message.tool_calls:
                     if not isinstance(tool_call, dict):
                         continue
                     action_id = str(tool_call.get("id", "")).strip()
                     if not action_id:
                         continue
 
-                    merged = dict(action_by_id.get(action_id, {"action_id": action_id}))
+                    confirmation = action_by_id.get(action_id, InteractionConfirmation(action_id=action_id))
                     confirmation_meta = tool_call.get("confirmation")
                     if isinstance(confirmation_meta, dict):
                         tool_input = confirmation_meta.get("tool_input")
                         if isinstance(tool_input, dict):
-                            merged["tool_input"] = dict(tool_input)
+                            confirmation.tool_input = dict(tool_input)
                         tool_name = confirmation_meta.get("tool_name")
                         if isinstance(tool_name, str) and tool_name:
-                            merged["source_tool_name"] = tool_name
+                            confirmation.source_tool_name = tool_name
 
                     args = tool_call.get("arguments")
                     if isinstance(args, dict):
-                        merged["tool_call_arguments"] = dict(args)
+                        confirmation.tool_call_arguments = dict(args)
 
                     suggested_inputs = None
-                    tool_input = merged.get("tool_input")
-                    if isinstance(tool_input, dict):
-                        suggested_inputs = tool_input.get("suggested_inputs")
-                    if suggested_inputs is None and isinstance(args, dict):
-                        suggested_inputs = args.get("suggested_inputs")
+                    if confirmation.tool_input and "suggested_inputs" in confirmation.tool_input:
+                        suggested_inputs = confirmation.tool_input.get("suggested_inputs")
+                    if suggested_inputs is None and confirmation.tool_call_arguments:
+                        suggested_inputs = confirmation.tool_call_arguments.get("suggested_inputs")
 
                     if isinstance(suggested_inputs, str):
                         raw = suggested_inputs.strip()
                         if raw:
                             try:
-                                merged["suggested_inputs"] = json.loads(raw)
+                                confirmation.suggested_inputs = json.loads(raw)
                             except json.JSONDecodeError:
-                                merged["suggested_inputs"] = raw
+                                confirmation.suggested_inputs = raw
                     elif suggested_inputs is not None:
-                        merged["suggested_inputs"] = suggested_inputs
+                        confirmation.suggested_inputs = suggested_inputs
 
-                    action_by_id[action_id] = merged
+                    action_by_id[action_id] = confirmation
 
-            confirmations.extend(action_by_id.values())
-            if confirmations:
-                return confirmations
+            if action_by_id:
+                return list(action_by_id.values())
             if has_finished_message or time.time() >= deadline:
-                return confirmations
+                return []
             time.sleep(max(poll_interval, 0.1))
 
-    def publish_chat(self, chat_uuid: str) -> dict[str, Any]:
+    def execute_confirm_action(
+        self,
+        chat_uuid: str,
+        message_uuid: str,
+        action_id: str,
+        continue_after_execute: bool = True,
+    ) -> dict[str, Any]:
         self.ensure_session_initialized()
-        self._sync_requests_to_httpx()
+        response = self._api_client.get_httpx_client().post(
+            f"/api/v1/chats/{chat_uuid}/messages/{message_uuid}/confirm-actions/{action_id}/execute",
+            json={"continue_after_execute": continue_after_execute},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("execute_confirm_action returned non-object response")
+        return payload
+
+    def publish_chat(self, chat_uuid: str) -> ChatsSharedChatPublishResponse:
+        self.ensure_session_initialized()
         response = post_api_chat_chat_uuid_publish.sync_detailed(client=self._api_client, chat_uuid=chat_uuid)
-        self._sync_httpx_to_requests()
-        if response.status_code >= 400 or response.parsed is None or isinstance(response.parsed, str):
-            raise requests.RequestException(f"publish_chat failed: {response.status_code} {response.content!r}")
-        return _as_dict(response.parsed)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "publish_chat")
+        if not isinstance(parsed, ChatsSharedChatPublishResponse):
+            raise RuntimeError(f"publish_chat returned unexpected type: {type(parsed)!r}")
+        return parsed
 
     def get_shared_interaction_url(self, chat_uuid: str) -> str:
         publish_data = self.publish_chat(chat_uuid)
-        share_uuid = publish_data.get("chat_share_uuid")
-        if not share_uuid:
+        if _is_unset(publish_data.chat_share_uuid):
             raise RuntimeError("publish endpoint did not return chat_share_uuid")
-        return f"{self.host}/interaction/{share_uuid}"
+        return f"{self.host}/interaction/{publish_data.chat_share_uuid}"
 
     def listen_shared_interaction_stream(
         self,
@@ -422,19 +408,18 @@ class OpenChatPythonClient:
         parsed_host = urlparse(self.host)
         if not parsed_host.netloc:
             raise ValueError(f"invalid host: {self.host}")
-
         ws_scheme = "wss" if parsed_host.scheme == "https" else "ws"
         ws_url = f"{ws_scheme}://{parsed_host.netloc}/ws/interaction/{chat_share_uuid}"
 
-        headers = []
+        headers: list[str] = []
         if self.api_token:
             headers.append(f"Authorization: Bearer {self.api_token}")
-        else:
-            self.ensure_session_initialized()
 
-        cookie_dict = self.session.cookies.get_dict()
-        if cookie_dict:
-            headers.append(f"Cookie: {'; '.join(f'{k}={v}' for k, v in cookie_dict.items())}")
+        cookie_pairs = []
+        for cookie in self._api_client.get_httpx_client().cookies.jar:
+            cookie_pairs.append(f"{cookie.name}={cookie.value}")
+        if cookie_pairs:
+            headers.append(f"Cookie: {'; '.join(cookie_pairs)}")
 
         events: list[dict[str, Any]] = []
         ws = create_connection(ws_url, timeout=timeout_seconds, header=headers)
@@ -450,7 +435,10 @@ class OpenChatPythonClient:
                     parsed_event = json.loads(raw_event)
                 except json.JSONDecodeError:
                     parsed_event = {"type": "raw", "raw": str(raw_event)}
-                events.append(parsed_event if isinstance(parsed_event, dict) else {"type": "raw", "raw": parsed_event})
+                if isinstance(parsed_event, dict):
+                    events.append(parsed_event)
+                else:
+                    events.append({"type": "raw", "raw": parsed_event})
         except Exception:
             pass
         finally:
@@ -475,9 +463,9 @@ def main() -> None:
         api_token=(args.api_token or None),
     )
     user = client.get_user_self() if args.api_token else client.login()
-    print(f"Logged in as: {user.get('name', 'unknown')}")
+    print(f"Logged in as: {user.name if not _is_unset(user.name) else 'unknown'}")
     chat = client.create_interaction(message=args.message)
-    print(f"Created interaction chat: {chat.get('uuid', '<unknown>')}")
+    print(f"Created interaction chat: {chat.uuid if not _is_unset(chat.uuid) else '<unknown>'}")
 
 
 if __name__ == "__main__":

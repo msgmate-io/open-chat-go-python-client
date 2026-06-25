@@ -8,7 +8,7 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.database_pagination import DatabasePagination
+from ...models.chats_listed_messages_page import ChatsListedMessagesPage
 from ...types import UNSET, Unset
 from typing import cast
 
@@ -46,9 +46,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DatabasePagination | str | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ChatsListedMessagesPage | str | None:
     if response.status_code == 200:
-        response_200 = DatabasePagination.from_dict(response.json())
+        response_200 = ChatsListedMessagesPage.from_dict(response.json())
 
 
 
@@ -72,7 +72,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DatabasePagination | str]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ChatsListedMessagesPage | str]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -88,7 +88,7 @@ def sync_detailed(
     page: int | Unset = 1,
     limit: int | Unset = 40,
 
-) -> Response[DatabasePagination | str]:
+) -> Response[ChatsListedMessagesPage | str]:
     """ List shared interaction messages
 
      Retrieve paginated messages for a shared interaction chat
@@ -103,7 +103,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DatabasePagination | str]
+        Response[ChatsListedMessagesPage | str]
      """
 
 
@@ -127,7 +127,7 @@ def sync(
     page: int | Unset = 1,
     limit: int | Unset = 40,
 
-) -> DatabasePagination | str | None:
+) -> ChatsListedMessagesPage | str | None:
     """ List shared interaction messages
 
      Retrieve paginated messages for a shared interaction chat
@@ -142,7 +142,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DatabasePagination | str
+        ChatsListedMessagesPage | str
      """
 
 
@@ -161,7 +161,7 @@ async def asyncio_detailed(
     page: int | Unset = 1,
     limit: int | Unset = 40,
 
-) -> Response[DatabasePagination | str]:
+) -> Response[ChatsListedMessagesPage | str]:
     """ List shared interaction messages
 
      Retrieve paginated messages for a shared interaction chat
@@ -176,7 +176,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DatabasePagination | str]
+        Response[ChatsListedMessagesPage | str]
      """
 
 
@@ -200,7 +200,7 @@ async def asyncio(
     page: int | Unset = 1,
     limit: int | Unset = 40,
 
-) -> DatabasePagination | str | None:
+) -> ChatsListedMessagesPage | str | None:
     """ List shared interaction messages
 
      Retrieve paginated messages for a shared interaction chat
@@ -215,7 +215,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DatabasePagination | str
+        ChatsListedMessagesPage | str
      """
 
 

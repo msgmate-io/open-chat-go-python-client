@@ -9,31 +9,32 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 from ..types import UNSET, Unset
+from typing import cast
+
+if TYPE_CHECKING:
+  from ..models.chats_listed_message import ChatsListedMessage
 
 
 
 
 
-
-T = TypeVar("T", bound="DatabasePagination")
+T = TypeVar("T", bound="ChatsListedMessagesPage")
 
 
 
 @_attrs_define
-class DatabasePagination:
+class ChatsListedMessagesPage:
     """ 
         Attributes:
             limit (int | Unset):
             page (int | Unset):
-            rows (Any | Unset):
-            sort (str | Unset):
+            rows (list[ChatsListedMessage] | Unset):
             total_pages (int | Unset):
      """
 
     limit: int | Unset = UNSET
     page: int | Unset = UNSET
-    rows: Any | Unset = UNSET
-    sort: str | Unset = UNSET
+    rows: list[ChatsListedMessage] | Unset = UNSET
     total_pages: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -42,13 +43,19 @@ class DatabasePagination:
 
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.chats_listed_message import ChatsListedMessage
         limit = self.limit
 
         page = self.page
 
-        rows = self.rows
+        rows: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.rows, Unset):
+            rows = []
+            for rows_item_data in self.rows:
+                rows_item = rows_item_data.to_dict()
+                rows.append(rows_item)
 
-        sort = self.sort
+
 
         total_pages = self.total_pages
 
@@ -63,8 +70,6 @@ class DatabasePagination:
             field_dict["page"] = page
         if rows is not UNSET:
             field_dict["rows"] = rows
-        if sort is not UNSET:
-            field_dict["sort"] = sort
         if total_pages is not UNSET:
             field_dict["total_pages"] = total_pages
 
@@ -74,28 +79,36 @@ class DatabasePagination:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.chats_listed_message import ChatsListedMessage
         d = dict(src_dict)
         limit = d.pop("limit", UNSET)
 
         page = d.pop("page", UNSET)
 
-        rows = d.pop("rows", UNSET)
+        _rows = d.pop("rows", UNSET)
+        rows: list[ChatsListedMessage] | Unset = UNSET
+        if _rows is not UNSET:
+            rows = []
+            for rows_item_data in _rows:
+                rows_item = ChatsListedMessage.from_dict(rows_item_data)
 
-        sort = d.pop("sort", UNSET)
+
+
+                rows.append(rows_item)
+
 
         total_pages = d.pop("total_pages", UNSET)
 
-        database_pagination = cls(
+        chats_listed_messages_page = cls(
             limit=limit,
             page=page,
             rows=rows,
-            sort=sort,
             total_pages=total_pages,
         )
 
 
-        database_pagination.additional_properties = d
-        return database_pagination
+        chats_listed_messages_page.additional_properties = d
+        return chats_listed_messages_page
 
     @property
     def additional_keys(self) -> list[str]:

@@ -5,6 +5,12 @@ This package now has two layers:
 - Typed base client generated from backend API docs (`backend/server/swagger.json`) via `openapi-python-client`
 - Handwritten `OpenChatPythonClient` wrapper in `client/client.py` for higher-level workflows
 
+Breaking change: the wrapper is now typed-first and returns model objects (not dict payloads).
+
+Comprehensive integration guide for external projects:
+
+- `clients/oc_python_client/INTEGRATION_GUIDE.md`
+
 Install directly from GitHub:
 
 ```bash
@@ -57,7 +63,8 @@ from client.client import OpenChatPythonClient
 client = OpenChatPythonClient(host="http://localhost:1984", username="admin", password="password")
 client.login()
 interactions = client.get_interactions(page=1, limit=40)
-print(interactions["rows"])
+for chat in interactions.rows:
+    print(chat.uuid, chat.chat_type)
 ```
 
 Regenerate the typed base client:

@@ -12,6 +12,7 @@ from ..types import UNSET, Unset
 from typing import cast
 
 if TYPE_CHECKING:
+  from ..models.chats_create_chat_shared_config import ChatsCreateChatSharedConfig
   from ..models.chats_file_attachment import ChatsFileAttachment
 
 
@@ -30,14 +31,14 @@ class ChatsCreateChat:
             chat_type (str | Unset):
             contact_token (str | Unset):
             first_message (str | Unset):
-            shared_config (list[int] | Unset):
+            shared_config (ChatsCreateChatSharedConfig | Unset):
      """
 
     attachments: list[ChatsFileAttachment] | Unset = UNSET
     chat_type: str | Unset = UNSET
     contact_token: str | Unset = UNSET
     first_message: str | Unset = UNSET
-    shared_config: list[int] | Unset = UNSET
+    shared_config: ChatsCreateChatSharedConfig | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -45,6 +46,7 @@ class ChatsCreateChat:
 
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.chats_create_chat_shared_config import ChatsCreateChatSharedConfig
         from ..models.chats_file_attachment import ChatsFileAttachment
         attachments: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.attachments, Unset):
@@ -61,11 +63,9 @@ class ChatsCreateChat:
 
         first_message = self.first_message
 
-        shared_config: list[int] | Unset = UNSET
+        shared_config: dict[str, Any] | Unset = UNSET
         if not isinstance(self.shared_config, Unset):
-            shared_config = self.shared_config
-
-
+            shared_config = self.shared_config.to_dict()
 
 
         field_dict: dict[str, Any] = {}
@@ -89,6 +89,7 @@ class ChatsCreateChat:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.chats_create_chat_shared_config import ChatsCreateChatSharedConfig
         from ..models.chats_file_attachment import ChatsFileAttachment
         d = dict(src_dict)
         _attachments = d.pop("attachments", UNSET)
@@ -109,7 +110,14 @@ class ChatsCreateChat:
 
         first_message = d.pop("first_message", UNSET)
 
-        shared_config = cast(list[int], d.pop("shared_config", UNSET))
+        _shared_config = d.pop("shared_config", UNSET)
+        shared_config: ChatsCreateChatSharedConfig | Unset
+        if isinstance(_shared_config,  Unset):
+            shared_config = UNSET
+        else:
+            shared_config = ChatsCreateChatSharedConfig.from_dict(_shared_config)
+
+
 
 
         chats_create_chat = cls(
