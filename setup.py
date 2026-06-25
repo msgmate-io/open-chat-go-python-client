@@ -5,8 +5,10 @@ setup(
     name="open_chat_client_python",
     version="0.1",
     packages=find_packages(),
-    python_requires=">=3.8, <4",
+    python_requires=">=3.10, <4",
     install_requires=[
+        "attrs>=22.2.0",
+        "httpx>=0.28,<0.29",
         "requests",
         "websocket-client",
     ],

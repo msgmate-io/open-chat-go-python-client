@@ -1,5 +1,10 @@
 ### Open Chat Python Client
 
+This package now has two layers:
+
+- Typed base client generated from backend API docs (`backend/server/swagger.json`) via `openapi-python-client`
+- Handwritten `OpenChatPythonClient` wrapper in `client/client.py` for higher-level workflows
+
 Install directly from GitHub:
 
 ```bash
@@ -54,3 +59,11 @@ client.login()
 interactions = client.get_interactions(page=1, limit=40)
 print(interactions["rows"])
 ```
+
+Regenerate the typed base client:
+
+```bash
+python3 development/scripts/update_oc_python_client_base.py
+```
+
+The generator script converts Swagger 2.0 to OpenAPI 3.0 with `swagger2openapi`, then runs `openapi-python-client` and updates `clients/oc_python_client/client/generated_api/`.

@@ -1,0 +1,4 @@
+content_type_overrides:
+  application/x-ndjson: application/json
+post_hooks: []
+project_name_override: open-chat-python-client-generated

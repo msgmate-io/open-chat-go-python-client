@@ -1,0 +1,136 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..types import UNSET, Unset
+
+from ..types import UNSET, Unset
+from typing import cast
+
+if TYPE_CHECKING:
+  from ..models.contacts_listed_contact import ContactsListedContact
+
+
+
+
+
+T = TypeVar("T", bound="ContactsPaginatedContacts")
+
+
+
+@_attrs_define
+class ContactsPaginatedContacts:
+    """ 
+        Attributes:
+            limit (int | Unset):
+            page (int | Unset):
+            rows (list[ContactsListedContact] | Unset):
+            sort (str | Unset):
+            total_pages (int | Unset):
+     """
+
+    limit: int | Unset = UNSET
+    page: int | Unset = UNSET
+    rows: list[ContactsListedContact] | Unset = UNSET
+    sort: str | Unset = UNSET
+    total_pages: int | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+
+
+
+
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.contacts_listed_contact import ContactsListedContact
+        limit = self.limit
+
+        page = self.page
+
+        rows: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.rows, Unset):
+            rows = []
+            for rows_item_data in self.rows:
+                rows_item = rows_item_data.to_dict()
+                rows.append(rows_item)
+
+
+
+        sort = self.sort
+
+        total_pages = self.total_pages
+
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update({
+        })
+        if limit is not UNSET:
+            field_dict["limit"] = limit
+        if page is not UNSET:
+            field_dict["page"] = page
+        if rows is not UNSET:
+            field_dict["rows"] = rows
+        if sort is not UNSET:
+            field_dict["sort"] = sort
+        if total_pages is not UNSET:
+            field_dict["total_pages"] = total_pages
+
+        return field_dict
+
+
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.contacts_listed_contact import ContactsListedContact
+        d = dict(src_dict)
+        limit = d.pop("limit", UNSET)
+
+        page = d.pop("page", UNSET)
+
+        _rows = d.pop("rows", UNSET)
+        rows: list[ContactsListedContact] | Unset = UNSET
+        if _rows is not UNSET:
+            rows = []
+            for rows_item_data in _rows:
+                rows_item = ContactsListedContact.from_dict(rows_item_data)
+
+
+
+                rows.append(rows_item)
+
+
+        sort = d.pop("sort", UNSET)
+
+        total_pages = d.pop("total_pages", UNSET)
+
+        contacts_paginated_contacts = cls(
+            limit=limit,
+            page=page,
+            rows=rows,
+            sort=sort,
+            total_pages=total_pages,
+        )
+
+
+        contacts_paginated_contacts.additional_properties = d
+        return contacts_paginated_contacts
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties
