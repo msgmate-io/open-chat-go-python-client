@@ -58,13 +58,20 @@ python development/scripts/test_client.py
 Python API example:
 
 ```python
-from client.client import OpenChatPythonClient
+from client.client import OpenChatClient, PasswordAuth
 
-client = OpenChatPythonClient(host="http://localhost:1984", username="admin", password="password")
+client = OpenChatClient(
+    base_url="http://localhost:1984",
+    auth=PasswordAuth(email="admin", password="password"),
+)
 client.login()
-interactions = client.get_interactions(page=1, limit=40)
-for chat in interactions.rows:
-    print(chat.uuid, chat.chat_type)
+
+bot = client.get_bot("bot")
+interaction = bot.create_interaction(message="Hello from Python")
+print("Chat UUID:", interaction.uuid)
+
+final = interaction.wait_until_finished(timeout_seconds=20)
+print("Finished payload type:", type(final).__name__)
 ```
 
 Regenerate the typed base client:
