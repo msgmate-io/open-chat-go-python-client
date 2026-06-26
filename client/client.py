@@ -20,7 +20,9 @@ from .generated_api.api.chats import (
     get_api_v1_chats_chat_uuid,
     get_api_v1_chats_list,
     post_api_chat_chat_uuid_publish,
+    post_api_v1_chats_create,
 )
+from .generated_api.api.contacts import get_api_v1_contacts_list
 from .generated_api.api.messages import get_api_v1_chats_chat_uuid_messages_list
 from .generated_api.api.tools import get_api_v1_tools_typing
 from .generated_api.api.user import post_api_v1_user_login
@@ -40,7 +42,11 @@ from .generated_api.models.chats_listed_chat import ChatsListedChat
 from .generated_api.models.chats_listed_chats_page import ChatsListedChatsPage
 from .generated_api.models.chats_listed_message import ChatsListedMessage
 from .generated_api.models.chats_listed_messages_page import ChatsListedMessagesPage
+from .generated_api.models.chats_create_chat import ChatsCreateChat
+from .generated_api.models.chats_create_chat_shared_config import ChatsCreateChatSharedConfig
 from .generated_api.models.chats_shared_chat_publish_response import ChatsSharedChatPublishResponse
+from .generated_api.models.contacts_listed_contact import ContactsListedContact
+from .generated_api.models.contacts_paginated_contacts import ContactsPaginatedContacts
 from .generated_api.models.database_user import DatabaseUser
 from .generated_api.models.tools_tools_typing_response import ToolsToolsTypingResponse
 from .generated_api.models.user_user_login import UserUserLogin
@@ -185,38 +191,53 @@ class InteractionSession:
 
 
 class Bot:
-    def __init__(self, client: "OpenChatClient", bot: BotsBotDTO):
+    def __init__(self, client: "OpenChatClient", bot: BotsBotDTO | ContactsListedContact):
         self._client = client
         self._bot = bot
 
     @property
-    def data(self) -> BotsBotDTO:
+    def data(self) -> BotsBotDTO | ContactsListedContact:
         return self._bot
 
     @property
-    def contact(self) -> BotsBotDTO:
+    def contact(self) -> BotsBotDTO | ContactsListedContact:
         return self._bot
+
+    @property
+    def is_legacy_contact_bot(self) -> bool:
+        return isinstance(self._bot, ContactsListedContact)
 
     @property
     def uuid(self) -> str:
+        if isinstance(self._bot, ContactsListedContact):
+            return _as_str(self._bot.user_uuid)
         return _as_str(self._bot.uuid)
 
     @property
     def bot_user_uuid(self) -> str:
+        if isinstance(self._bot, ContactsListedContact):
+            return _as_str(self._bot.user_uuid)
         return _as_str(self._bot.bot_user_uuid)
 
     @property
     def name(self) -> str:
+        if isinstance(self._bot, ContactsListedContact):
+            return _as_str(self._bot.name)
         return _as_str(self._bot.name)
 
     @property
     def contact_token(self) -> str:
-        token = _as_str(self._bot.bot_contact_token)
+        if isinstance(self._bot, ContactsListedContact):
+            token = _as_str(self._bot.contact_token)
+        else:
+            token = _as_str(self._bot.bot_contact_token)
         if not token:
             raise RuntimeError("bot is missing contact_token")
         return token
 
-    def refresh(self) -> BotsBotDTO:
+    def refresh(self) -> BotsBotDTO | ContactsListedContact:
+        if isinstance(self._bot, ContactsListedContact):
+            return self._bot
         response = get_api_v1_bots_identifier.sync_detailed(identifier=self.uuid or self.name, client=self._client._api)
         parsed = _expect_ok(response.parsed, int(response.status_code), "bot refresh")
         if not isinstance(parsed, BotsBotDTO):
@@ -225,6 +246,8 @@ class Bot:
         return parsed
 
     def default_config(self) -> dict[str, Any]:
+        if isinstance(self._bot, ContactsListedContact):
+            return dict(DEFAULT_BOT_CONFIG)
         if _is_unset(self._bot.default_shared_config):
             return dict(DEFAULT_BOT_CONFIG)
         resolved = dict(DEFAULT_BOT_CONFIG)
@@ -356,11 +379,36 @@ class OpenChatClient:
         if not identifier.strip():
             raise ValueError("bot identifier is required")
         self.ensure_authenticated()
-        response = get_api_v1_bots_identifier.sync_detailed(client=self._api, identifier=identifier.strip())
-        parsed = _expect_ok(response.parsed, int(response.status_code), "get_bot")
-        if not isinstance(parsed, BotsBotDTO):
-            raise RuntimeError(f"get_bot returned unexpected type: {type(parsed)!r}")
-        return Bot(client=self, bot=parsed)
+        normalized = identifier.strip()
+        raw_response = self._api.get_httpx_client().get(f"/api/v1/bots/{normalized}")
+        if raw_response.status_code < 400:
+            try:
+                payload = raw_response.json()
+            except Exception as exc:
+                raise RuntimeError(f"get_bot failed to decode response: {exc}") from exc
+            if isinstance(payload, dict):
+                return Bot(client=self, bot=BotsBotDTO.from_dict(payload))
+
+        # Backward-compatible fallback for legacy automated contacts that are not
+        # represented in /api/v1/bots yet (e.g. default bootstrap bot).
+        page = 1
+        while True:
+            contacts_response = get_api_v1_contacts_list.sync_detailed(client=self._api, page=page, limit=100)
+            contacts_parsed = _expect_ok(contacts_response.parsed, int(contacts_response.status_code), "get_bot fallback")
+            if not isinstance(contacts_parsed, ContactsPaginatedContacts):
+                raise RuntimeError(f"get_bot fallback returned unexpected type: {type(contacts_parsed)!r}")
+            rows = [] if _is_unset(contacts_parsed.rows) else contacts_parsed.rows
+            for row in rows:
+                if _is_unset(row.is_automated) or not row.is_automated:
+                    continue
+                if normalized in {_as_str(row.user_uuid), _as_str(row.name), _as_str(row.contact_token)}:
+                    return Bot(client=self, bot=row)
+            total_pages = 1 if _is_unset(contacts_parsed.total_pages) else int(contacts_parsed.total_pages)
+            if page >= total_pages:
+                break
+            page += 1
+
+        raise RuntimeError(f"bot not found: {identifier}")
 
     def bot(self, identifier: str) -> Bot:
         return self.get_bot(identifier)
@@ -463,6 +511,25 @@ class OpenChatClient:
         effective_overrides = _to_plain_data(dict(self._default_interaction_overrides))
         if overrides:
             effective_overrides.update(_to_plain_data(overrides))
+
+        if bot.is_legacy_contact_bot:
+            legacy_effective_config = dict(bot.default_config())
+            legacy_effective_config.update(effective_overrides)
+            legacy_effective_config["tool_init"] = _to_plain_data(tool_init or {})
+
+            legacy_body = ChatsCreateChat(
+                contact_token=bot.contact_token,
+                first_message=message,
+                chat_type="interaction",
+                shared_config=ChatsCreateChatSharedConfig.from_dict(legacy_effective_config),
+            )
+            legacy_response = post_api_v1_chats_create.sync_detailed(client=self._api, body=legacy_body)
+            legacy_parsed = _expect_ok(legacy_response.parsed, int(legacy_response.status_code), "create_interaction_for_bot")
+            if not isinstance(legacy_parsed, ChatsListedChat):
+                raise RuntimeError(f"create_interaction_for_bot returned unexpected type: {type(legacy_parsed)!r}")
+            if not _is_unset(legacy_parsed.uuid):
+                self._last_chat_uuid = legacy_parsed.uuid
+            return InteractionSession(client=self, interaction=legacy_parsed)
 
         body = BotsCreateBotInteractionRequest(
             message=message,
