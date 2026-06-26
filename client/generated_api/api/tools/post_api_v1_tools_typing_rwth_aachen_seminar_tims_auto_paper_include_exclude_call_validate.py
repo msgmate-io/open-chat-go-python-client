@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.post_api_v1_tools_typing_rwth_aachen_seminar_tims_auto_paper_include_exclude_call_validate_response_200 import PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200
 from ...models.rwth_aachen_seminar_tims_auto_paper_include_exclude_call import RwthAachenSeminarTimsAutoPaperIncludeExcludeCall
+from ...models.tools_tool_validate_payload_response import ToolsToolValidatePayloadResponse
 from typing import cast
 
 
@@ -40,9 +40,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200 | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ToolsToolValidatePayloadResponse | None:
     if response.status_code == 200:
-        response_200 = PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200.from_dict(response.json())
+        response_200 = ToolsToolValidatePayloadResponse.from_dict(response.json())
 
 
 
@@ -58,7 +58,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ToolsToolValidatePayloadResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -72,7 +72,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: RwthAachenSeminarTimsAutoPaperIncludeExcludeCall,
 
-) -> Response[Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200]:
+) -> Response[Any | ToolsToolValidatePayloadResponse]:
     """ Validate rwth_aachen_seminar_tims_auto_paper_include_exclude call payload
 
      Validate payload for tool `rwth_aachen_seminar_tims_auto_paper_include_exclude` call arguments.
@@ -85,7 +85,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200]
+        Response[Any | ToolsToolValidatePayloadResponse]
      """
 
 
@@ -105,7 +105,7 @@ def sync(
     client: AuthenticatedClient | Client,
     body: RwthAachenSeminarTimsAutoPaperIncludeExcludeCall,
 
-) -> Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200 | None:
+) -> Any | ToolsToolValidatePayloadResponse | None:
     """ Validate rwth_aachen_seminar_tims_auto_paper_include_exclude call payload
 
      Validate payload for tool `rwth_aachen_seminar_tims_auto_paper_include_exclude` call arguments.
@@ -118,7 +118,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200
+        Any | ToolsToolValidatePayloadResponse
      """
 
 
@@ -133,7 +133,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: RwthAachenSeminarTimsAutoPaperIncludeExcludeCall,
 
-) -> Response[Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200]:
+) -> Response[Any | ToolsToolValidatePayloadResponse]:
     """ Validate rwth_aachen_seminar_tims_auto_paper_include_exclude call payload
 
      Validate payload for tool `rwth_aachen_seminar_tims_auto_paper_include_exclude` call arguments.
@@ -146,7 +146,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200]
+        Response[Any | ToolsToolValidatePayloadResponse]
      """
 
 
@@ -166,7 +166,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: RwthAachenSeminarTimsAutoPaperIncludeExcludeCall,
 
-) -> Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200 | None:
+) -> Any | ToolsToolValidatePayloadResponse | None:
     """ Validate rwth_aachen_seminar_tims_auto_paper_include_exclude call payload
 
      Validate payload for tool `rwth_aachen_seminar_tims_auto_paper_include_exclude` call arguments.
@@ -179,7 +179,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200
+        Any | ToolsToolValidatePayloadResponse
      """
 
 

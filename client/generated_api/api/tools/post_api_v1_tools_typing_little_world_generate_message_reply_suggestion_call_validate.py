@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.little_world_generate_message_reply_suggestion_call import LittleWorldGenerateMessageReplySuggestionCall
-from ...models.post_api_v1_tools_typing_little_world_generate_message_reply_suggestion_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200
+from ...models.tools_tool_validate_payload_response import ToolsToolValidatePayloadResponse
 from typing import cast
 
 
@@ -40,9 +40,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200 | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ToolsToolValidatePayloadResponse | None:
     if response.status_code == 200:
-        response_200 = PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200.from_dict(response.json())
+        response_200 = ToolsToolValidatePayloadResponse.from_dict(response.json())
 
 
 
@@ -58,7 +58,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ToolsToolValidatePayloadResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -72,7 +72,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: LittleWorldGenerateMessageReplySuggestionCall,
 
-) -> Response[Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200]:
+) -> Response[Any | ToolsToolValidatePayloadResponse]:
     """ Validate little_world__generate_message_reply_suggestion call payload
 
      Validate payload for tool `little_world__generate_message_reply_suggestion` call arguments.
@@ -86,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200]
+        Response[Any | ToolsToolValidatePayloadResponse]
      """
 
 
@@ -106,7 +106,7 @@ def sync(
     client: AuthenticatedClient | Client,
     body: LittleWorldGenerateMessageReplySuggestionCall,
 
-) -> Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200 | None:
+) -> Any | ToolsToolValidatePayloadResponse | None:
     """ Validate little_world__generate_message_reply_suggestion call payload
 
      Validate payload for tool `little_world__generate_message_reply_suggestion` call arguments.
@@ -120,7 +120,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200
+        Any | ToolsToolValidatePayloadResponse
      """
 
 
@@ -135,7 +135,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: LittleWorldGenerateMessageReplySuggestionCall,
 
-) -> Response[Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200]:
+) -> Response[Any | ToolsToolValidatePayloadResponse]:
     """ Validate little_world__generate_message_reply_suggestion call payload
 
      Validate payload for tool `little_world__generate_message_reply_suggestion` call arguments.
@@ -149,7 +149,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200]
+        Response[Any | ToolsToolValidatePayloadResponse]
      """
 
 
@@ -169,7 +169,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: LittleWorldGenerateMessageReplySuggestionCall,
 
-) -> Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200 | None:
+) -> Any | ToolsToolValidatePayloadResponse | None:
     """ Validate little_world__generate_message_reply_suggestion call payload
 
      Validate payload for tool `little_world__generate_message_reply_suggestion` call arguments.
@@ -183,7 +183,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200
+        Any | ToolsToolValidatePayloadResponse
      """
 
 
