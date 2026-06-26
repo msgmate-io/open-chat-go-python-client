@@ -1,31 +1,48 @@
 import argparse
 import json
+import re
 import time
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any, Optional
 from urllib.parse import urlparse
 
 from .generated_api import Client as GeneratedClient
+from .generated_api.api.bots import (
+    delete_api_v1_bots_identifier,
+    get_api_v1_bots_identifier,
+    get_api_v1_bots_list,
+    patch_api_v1_bots_identifier,
+    post_api_v1_bots,
+    post_api_v1_bots_identifier_interactions,
+)
 from .generated_api.api.chats import (
     get_api_v1_chats_chat_uuid,
     get_api_v1_chats_list,
     post_api_chat_chat_uuid_publish,
-    post_api_v1_chats_create,
 )
-from .generated_api.api.contacts import get_api_v1_contacts_contact_token, get_api_v1_contacts_list
 from .generated_api.api.messages import get_api_v1_chats_chat_uuid_messages_list
+from .generated_api.api.tools import get_api_v1_tools_typing
 from .generated_api.api.user import post_api_v1_user_login
 from .generated_api.api.users import get_api_v1_user_self
-from .generated_api.models.chats_create_chat import ChatsCreateChat
-from .generated_api.models.chats_create_chat_shared_config import ChatsCreateChatSharedConfig
+from .generated_api.models.bots_bot_dto import BotsBotDTO
+from .generated_api.models.bots_bot_interaction_response import BotsBotInteractionResponse
+from .generated_api.models.bots_create_bot_interaction_request import BotsCreateBotInteractionRequest
+from .generated_api.models.bots_create_bot_interaction_request_config_overrides import BotsCreateBotInteractionRequestConfigOverrides
+from .generated_api.models.bots_create_bot_interaction_request_tool_init import BotsCreateBotInteractionRequestToolInit
+from .generated_api.models.bots_create_bot_request import BotsCreateBotRequest
+from .generated_api.models.bots_create_bot_request_default_shared_config import BotsCreateBotRequestDefaultSharedConfig
+from .generated_api.models.bots_create_bot_response import BotsCreateBotResponse
+from .generated_api.models.bots_listed_bots_page import BotsListedBotsPage
+from .generated_api.models.bots_update_bot_request import BotsUpdateBotRequest
+from .generated_api.models.bots_update_bot_request_default_shared_config import BotsUpdateBotRequestDefaultSharedConfig
 from .generated_api.models.chats_listed_chat import ChatsListedChat
 from .generated_api.models.chats_listed_chats_page import ChatsListedChatsPage
 from .generated_api.models.chats_listed_message import ChatsListedMessage
 from .generated_api.models.chats_listed_messages_page import ChatsListedMessagesPage
 from .generated_api.models.chats_shared_chat_publish_response import ChatsSharedChatPublishResponse
-from .generated_api.models.contacts_listed_contact import ContactsListedContact
-from .generated_api.models.contacts_paginated_contacts import ContactsPaginatedContacts
 from .generated_api.models.database_user import DatabaseUser
+from .generated_api.models.tools_tools_typing_response import ToolsToolsTypingResponse
 from .generated_api.models.user_user_login import UserUserLogin
 from .generated_api.types import UNSET, Unset
 
@@ -89,6 +106,25 @@ def _expect_ok(parsed: Any, status_code: int, context: str) -> Any:
     return parsed
 
 
+def _to_plain_data(value: Any) -> Any:
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return _to_plain_data(value.to_dict())
+    if isinstance(value, dict):
+        return {str(k): _to_plain_data(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_plain_data(item) for item in value]
+    return value
+
+
+def _enum_member_name(raw: str) -> str:
+    name = re.sub(r"[^A-Za-z0-9]+", "_", raw).strip("_").upper()
+    if not name:
+        name = "UNKNOWN_TOOL"
+    if name[0].isdigit():
+        name = f"TOOL_{name}"
+    return name
+
+
 class InteractionSession:
     def __init__(self, client: "OpenChatClient", interaction: Interaction):
         self._client = client
@@ -149,58 +185,51 @@ class InteractionSession:
 
 
 class Bot:
-    def __init__(self, client: "OpenChatClient", contact: ContactsListedContact):
+    def __init__(self, client: "OpenChatClient", bot: BotsBotDTO):
         self._client = client
-        self._contact = contact
-        self._resolved_profile: ContactsListedContact | None = None
+        self._bot = bot
 
     @property
-    def contact(self) -> ContactsListedContact:
-        return self._contact
+    def data(self) -> BotsBotDTO:
+        return self._bot
+
+    @property
+    def contact(self) -> BotsBotDTO:
+        return self._bot
 
     @property
     def uuid(self) -> str:
-        return _as_str(self._contact.user_uuid)
+        return _as_str(self._bot.uuid)
+
+    @property
+    def bot_user_uuid(self) -> str:
+        return _as_str(self._bot.bot_user_uuid)
 
     @property
     def name(self) -> str:
-        return _as_str(self._contact.name)
+        return _as_str(self._bot.name)
 
     @property
     def contact_token(self) -> str:
-        token = _as_str(self._contact.contact_token)
+        token = _as_str(self._bot.bot_contact_token)
         if not token:
             raise RuntimeError("bot is missing contact_token")
         return token
 
-    def refresh(self) -> ContactsListedContact:
-        response = get_api_v1_contacts_contact_token.sync_detailed(contact_token=self.contact_token, client=self._client._api)
+    def refresh(self) -> BotsBotDTO:
+        response = get_api_v1_bots_identifier.sync_detailed(identifier=self.uuid or self.name, client=self._client._api)
         parsed = _expect_ok(response.parsed, int(response.status_code), "bot refresh")
-        if not isinstance(parsed, ContactsListedContact):
+        if not isinstance(parsed, BotsBotDTO):
             raise RuntimeError(f"bot refresh returned unexpected type: {type(parsed)!r}")
-        self._resolved_profile = parsed
-        self._contact = parsed
+        self._bot = parsed
         return parsed
 
     def default_config(self) -> dict[str, Any]:
-        if self._resolved_profile is None:
-            self.refresh()
-        profile = self._resolved_profile
-        if profile is None or _is_unset(profile.profile_data):
+        if _is_unset(self._bot.default_shared_config):
             return dict(DEFAULT_BOT_CONFIG)
-
-        profile_data = profile.profile_data.additional_properties
-        models = profile_data.get("models")
-        if isinstance(models, list):
-            for model in models:
-                if not isinstance(model, dict):
-                    continue
-                config = model.get("configuration")
-                if isinstance(config, dict):
-                    resolved = dict(DEFAULT_BOT_CONFIG)
-                    resolved.update(config)
-                    return resolved
-        return dict(DEFAULT_BOT_CONFIG)
+        resolved = dict(DEFAULT_BOT_CONFIG)
+        resolved.update(self._bot.default_shared_config.additional_properties)
+        return resolved
 
     def create_interaction(
         self,
@@ -282,24 +311,43 @@ class OpenChatClient:
     def get_user_self(self) -> DatabaseUser:
         return self.me()
 
-    def list_bots(self, page_size: int = 100) -> list[Bot]:
+    def list_bots(self, page_size: int = 100, include_public: bool = False) -> list[Bot]:
         self.ensure_authenticated()
         page = 1
         bots: list[Bot] = []
         while True:
-            response = get_api_v1_contacts_list.sync_detailed(client=self._api, page=page, limit=page_size)
+            response = get_api_v1_bots_list.sync_detailed(
+                client=self._api,
+                page=page,
+                limit=page_size,
+                include_public=include_public,
+            )
             parsed = _expect_ok(response.parsed, int(response.status_code), "list_bots")
-            if not isinstance(parsed, ContactsPaginatedContacts):
+            if not isinstance(parsed, BotsListedBotsPage):
                 raise RuntimeError(f"list_bots returned unexpected type: {type(parsed)!r}")
             rows = [] if _is_unset(parsed.rows) else parsed.rows
             for row in rows:
-                if not _is_unset(row.is_automated) and row.is_automated:
-                    bots.append(Bot(client=self, contact=row))
+                bots.append(Bot(client=self, bot=row))
             total_pages = 1 if _is_unset(parsed.total_pages) else int(parsed.total_pages)
             if page >= total_pages:
                 break
             page += 1
         return bots
+
+    def get_bots(self, page_size: int = 100, include_public: bool = False) -> list[Bot]:
+        return self.list_bots(page_size=page_size, include_public=include_public)
+
+    def list_owned_bots(self, page_size: int = 100) -> list[Bot]:
+        return self.list_bots(page_size=page_size, include_public=False)
+
+    def get_default_bot(self, preferred_name: str = "bot") -> Bot:
+        bots = self.get_bots()
+        if not bots:
+            raise RuntimeError("no automated bots available")
+        for bot in bots:
+            if bot.name == preferred_name:
+                return bot
+        return bots[0]
 
     def setup_bot_config(self, bot_config: dict[str, Any]) -> None:
         self._default_interaction_overrides = dict(bot_config)
@@ -307,18 +355,102 @@ class OpenChatClient:
     def get_bot(self, identifier: str) -> Bot:
         if not identifier.strip():
             raise ValueError("bot identifier is required")
-        bots = self.list_bots()
-        matches = []
-        needle = identifier.strip()
-        for bot in bots:
-            if bot.uuid == needle or bot.name == needle or bot.contact_token == needle:
-                matches.append(bot)
-        if not matches:
-            raise RuntimeError(f"bot not found: {identifier}")
-        if len(matches) > 1:
-            options = ", ".join(f"{bot.name} ({bot.uuid})" for bot in matches)
-            raise RuntimeError(f"ambiguous bot identifier '{identifier}': {options}")
-        return matches[0]
+        self.ensure_authenticated()
+        response = get_api_v1_bots_identifier.sync_detailed(client=self._api, identifier=identifier.strip())
+        parsed = _expect_ok(response.parsed, int(response.status_code), "get_bot")
+        if not isinstance(parsed, BotsBotDTO):
+            raise RuntimeError(f"get_bot returned unexpected type: {type(parsed)!r}")
+        return Bot(client=self, bot=parsed)
+
+    def bot(self, identifier: str) -> Bot:
+        return self.get_bot(identifier)
+
+    def list_tool_names(self) -> list[str]:
+        self.ensure_authenticated()
+        response = get_api_v1_tools_typing.sync_detailed(client=self._api)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "list_tool_names")
+        if not isinstance(parsed, ToolsToolsTypingResponse):
+            raise RuntimeError(f"list_tool_names returned unexpected type: {type(parsed)!r}")
+
+        rows = [] if _is_unset(parsed.rows) else parsed.rows
+        names = []
+        for row in rows:
+            if _is_unset(row.name):
+                continue
+            name = str(row.name).strip()
+            if name:
+                names.append(name)
+        return sorted(set(names))
+
+    def get_tool_name_enum(self, enum_name: str = "ToolNameDynamic") -> type[StrEnum]:
+        members: dict[str, str] = {}
+        for tool_name in self.list_tool_names():
+            candidate = _enum_member_name(tool_name)
+            unique = candidate
+            index = 2
+            while unique in members and members[unique] != tool_name:
+                unique = f"{candidate}_{index}"
+                index += 1
+            members[unique] = tool_name
+        return StrEnum(enum_name, members)
+
+    def create_bot(
+        self,
+        name: str,
+        default_shared_config: dict[str, Any],
+        description: str = "",
+        password: str | None = None,
+        is_public: bool = False,
+    ) -> Bot:
+        self.ensure_authenticated()
+        body = BotsCreateBotRequest(
+            name=name,
+            description=description,
+            is_public=is_public,
+            password=password if password is not None else UNSET,
+            default_shared_config=BotsCreateBotRequestDefaultSharedConfig.from_dict(default_shared_config),
+        )
+        response = post_api_v1_bots.sync_detailed(client=self._api, body=body)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "create_bot")
+        if not isinstance(parsed, BotsCreateBotResponse) or _is_unset(parsed.bot):
+            raise RuntimeError(f"create_bot returned unexpected type: {type(parsed)!r}")
+        return Bot(client=self, bot=parsed.bot)
+
+    def update_bot(
+        self,
+        identifier: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        default_shared_config: dict[str, Any] | None = None,
+        is_public: bool | None = None,
+        is_active: bool | None = None,
+    ) -> Bot:
+        self.ensure_authenticated()
+        body = BotsUpdateBotRequest(
+            name=name if name is not None else UNSET,
+            description=description if description is not None else UNSET,
+            default_shared_config=(
+                BotsUpdateBotRequestDefaultSharedConfig.from_dict(default_shared_config)
+                if default_shared_config is not None
+                else UNSET
+            ),
+            is_public=is_public if is_public is not None else UNSET,
+            is_active=is_active if is_active is not None else UNSET,
+        )
+        response = patch_api_v1_bots_identifier.sync_detailed(client=self._api, identifier=identifier, body=body)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "update_bot")
+        if not isinstance(parsed, BotsBotDTO):
+            raise RuntimeError(f"update_bot returned unexpected type: {type(parsed)!r}")
+        return Bot(client=self, bot=parsed)
+
+    def delete_bot(self, identifier: str) -> Bot:
+        self.ensure_authenticated()
+        response = delete_api_v1_bots_identifier.sync_detailed(client=self._api, identifier=identifier)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "delete_bot")
+        if not isinstance(parsed, BotsBotDTO):
+            raise RuntimeError(f"delete_bot returned unexpected type: {type(parsed)!r}")
+        return Bot(client=self, bot=parsed)
 
     def create_interaction_for_bot(
         self,
@@ -328,27 +460,37 @@ class OpenChatClient:
         overrides: Optional[dict[str, Any]] = None,
     ) -> InteractionSession:
         self.ensure_authenticated()
-        effective_config = bot.default_config()
-        effective_config.update(self._default_interaction_overrides)
+        effective_overrides = _to_plain_data(dict(self._default_interaction_overrides))
         if overrides:
-            effective_config.update(overrides)
-        effective_config["tool_init"] = tool_init or {}
+            effective_overrides.update(_to_plain_data(overrides))
 
-        body = ChatsCreateChat(
-            contact_token=bot.contact_token,
-            first_message=message,
-            chat_type="interaction",
-            shared_config=ChatsCreateChatSharedConfig.from_dict(effective_config),
+        body = BotsCreateBotInteractionRequest(
+            message=message,
+            tool_init=BotsCreateBotInteractionRequestToolInit.from_dict(_to_plain_data(tool_init or {})),
+            config_overrides=BotsCreateBotInteractionRequestConfigOverrides.from_dict(effective_overrides),
         )
-        response = post_api_v1_chats_create.sync_detailed(client=self._api, body=body)
+        response = post_api_v1_bots_identifier_interactions.sync_detailed(client=self._api, identifier=bot.uuid or bot.name, body=body)
         parsed = _expect_ok(response.parsed, int(response.status_code), "create_interaction_for_bot")
-        if not isinstance(parsed, ChatsListedChat):
+        if not isinstance(parsed, BotsBotInteractionResponse) or _is_unset(parsed.chat_uuid):
             raise RuntimeError(f"create_interaction_for_bot returned unexpected type: {type(parsed)!r}")
-        if not _is_unset(parsed.chat_type) and not str(parsed.chat_type).startswith("interaction"):
-            raise RuntimeError(f"create_interaction_for_bot returned non-interaction chat_type: {parsed.chat_type}")
-        if not _is_unset(parsed.uuid):
-            self._last_chat_uuid = parsed.uuid
-        return InteractionSession(client=self, interaction=parsed)
+        chat_uuid = _as_str(parsed.chat_uuid)
+        interaction = self.get_interaction(chat_uuid)
+        if not _is_unset(interaction.uuid):
+            self._last_chat_uuid = interaction.uuid
+        return InteractionSession(client=self, interaction=interaction)
+
+    def interact(
+        self,
+        message: str,
+        bot: str = "bot",
+        tool_init: Optional[dict[str, Any]] = None,
+        overrides: Optional[dict[str, Any]] = None,
+    ) -> InteractionSession:
+        return self.get_bot(bot).create_interaction(
+            message=message,
+            tool_init=tool_init,
+            overrides=overrides,
+        )
 
     def create_interaction(
         self,

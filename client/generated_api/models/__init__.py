@@ -1,5 +1,17 @@
 """ Contains all the data models used in inputs/outputs """
 
+from .bots_bot_dto import BotsBotDTO
+from .bots_bot_dto_default_shared_config import BotsBotDTODefaultSharedConfig
+from .bots_bot_interaction_response import BotsBotInteractionResponse
+from .bots_create_bot_interaction_request import BotsCreateBotInteractionRequest
+from .bots_create_bot_interaction_request_config_overrides import BotsCreateBotInteractionRequestConfigOverrides
+from .bots_create_bot_interaction_request_tool_init import BotsCreateBotInteractionRequestToolInit
+from .bots_create_bot_request import BotsCreateBotRequest
+from .bots_create_bot_request_default_shared_config import BotsCreateBotRequestDefaultSharedConfig
+from .bots_create_bot_response import BotsCreateBotResponse
+from .bots_listed_bots_page import BotsListedBotsPage
+from .bots_update_bot_request import BotsUpdateBotRequest
+from .bots_update_bot_request_default_shared_config import BotsUpdateBotRequestDefaultSharedConfig
 from .chats_create_chat import ChatsCreateChat
 from .chats_create_chat_shared_config import ChatsCreateChatSharedConfig
 from .chats_file_attachment import ChatsFileAttachment
@@ -17,16 +29,40 @@ from .contacts_add_contact import ContactsAddContact
 from .contacts_listed_contact import ContactsListedContact
 from .contacts_listed_contact_profile_data import ContactsListedContactProfileData
 from .contacts_paginated_contacts import ContactsPaginatedContacts
+from .create_confirmable_action_suggestion_call import CreateConfirmableActionSuggestionCall
+from .create_confirmable_action_suggestion_init import CreateConfirmableActionSuggestionInit
 from .database_message import DatabaseMessage
 from .database_user import DatabaseUser
 from .get_api_v1_interactions_chat_uuid_tools_response_200 import GetApiV1InteractionsChatUuidToolsResponse200
 from .get_api_v1_interactions_chat_uuid_tools_response_400 import GetApiV1InteractionsChatUuidToolsResponse400
 from .get_api_v1_interactions_chat_uuid_tools_response_403 import GetApiV1InteractionsChatUuidToolsResponse403
 from .get_api_v1_interactions_chat_uuid_tools_response_404 import GetApiV1InteractionsChatUuidToolsResponse404
+from .get_current_time_call import GetCurrentTimeCall
+from .get_current_time_confirmed_call import GetCurrentTimeConfirmedCall
+from .get_current_time_confirmed_testing_call import GetCurrentTimeConfirmedTestingCall
+from .get_random_number_call import GetRandomNumberCall
+from .get_weather_call import GetWeatherCall
+from .little_world_chat_reply_call import LittleWorldChatReplyCall
+from .little_world_chat_reply_init import LittleWorldChatReplyInit
+from .little_world_generate_message_reply_suggestion_call import LittleWorldGenerateMessageReplySuggestionCall
+from .little_world_generate_message_reply_suggestion_init import LittleWorldGenerateMessageReplySuggestionInit
+from .little_world_get_past_messages_call import LittleWorldGetPastMessagesCall
+from .little_world_get_past_messages_init import LittleWorldGetPastMessagesInit
+from .little_world_get_user_state_call import LittleWorldGetUserStateCall
+from .little_world_get_user_state_init import LittleWorldGetUserStateInit
+from .little_world_resolve_match_call import LittleWorldResolveMatchCall
+from .little_world_resolve_match_init import LittleWorldResolveMatchInit
+from .little_world_retrieve_match_overview_call import LittleWorldRetrieveMatchOverviewCall
+from .little_world_retrieve_match_overview_init import LittleWorldRetrieveMatchOverviewInit
+from .little_world_set_user_searching_state_call import LittleWorldSetUserSearchingStateCall
+from .little_world_set_user_searching_state_init import LittleWorldSetUserSearchingStateInit
 from .models_bot_option import ModelsBotOption
 from .models_model_list_item import ModelsModelListItem
 from .models_models_filters import ModelsModelsFilters
 from .models_models_list_response import ModelsModelsListResponse
+from .n8n_trigger_workflow_webhook_call import N8NTriggerWorkflowWebhookCall
+from .n8n_trigger_workflow_webhook_call_input_parameters import N8NTriggerWorkflowWebhookCallInputParameters
+from .n8n_trigger_workflow_webhook_init import N8NTriggerWorkflowWebhookInit
 from .post_api_chat_chat_uuid_unpublish_response_200 import PostApiChatChatUuidUnpublishResponse200
 from .post_api_v1_interactions_chat_uuid_tools_init_response_200 import PostApiV1InteractionsChatUuidToolsInitResponse200
 from .post_api_v1_interactions_chat_uuid_tools_init_response_400 import PostApiV1InteractionsChatUuidToolsInitResponse400
@@ -35,6 +71,43 @@ from .post_api_v1_interactions_chat_uuid_tools_init_response_404 import PostApiV
 from .post_api_v1_interactions_chat_uuid_tools_tool_name_response_400 import PostApiV1InteractionsChatUuidToolsToolNameResponse400
 from .post_api_v1_interactions_chat_uuid_tools_tool_name_response_403 import PostApiV1InteractionsChatUuidToolsToolNameResponse403
 from .post_api_v1_interactions_chat_uuid_tools_tool_name_response_404 import PostApiV1InteractionsChatUuidToolsToolNameResponse404
+from .post_api_v1_tools_typing_create_confirmable_action_suggestion_call_validate_response_200 import PostApiV1ToolsTypingCreateConfirmableActionSuggestionCallValidateResponse200
+from .post_api_v1_tools_typing_create_confirmable_action_suggestion_init_validate_response_200 import PostApiV1ToolsTypingCreateConfirmableActionSuggestionInitValidateResponse200
+from .post_api_v1_tools_typing_get_current_time_call_validate_response_200 import PostApiV1ToolsTypingGetCurrentTimeCallValidateResponse200
+from .post_api_v1_tools_typing_get_current_time_confirmed_call_validate_response_200 import PostApiV1ToolsTypingGetCurrentTimeConfirmedCallValidateResponse200
+from .post_api_v1_tools_typing_get_current_time_confirmed_testing_call_validate_response_200 import PostApiV1ToolsTypingGetCurrentTimeConfirmedTestingCallValidateResponse200
+from .post_api_v1_tools_typing_get_random_number_call_validate_response_200 import PostApiV1ToolsTypingGetRandomNumberCallValidateResponse200
+from .post_api_v1_tools_typing_get_weather_call_validate_response_200 import PostApiV1ToolsTypingGetWeatherCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_chat_reply_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldChatReplyCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_chat_reply_init_validate_response_200 import PostApiV1ToolsTypingLittleWorldChatReplyInitValidateResponse200
+from .post_api_v1_tools_typing_little_world_generate_message_reply_suggestion_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_generate_message_reply_suggestion_init_validate_response_200 import PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionInitValidateResponse200
+from .post_api_v1_tools_typing_little_world_get_past_messages_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldGetPastMessagesCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_get_past_messages_init_validate_response_200 import PostApiV1ToolsTypingLittleWorldGetPastMessagesInitValidateResponse200
+from .post_api_v1_tools_typing_little_world_get_user_state_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldGetUserStateCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_get_user_state_init_validate_response_200 import PostApiV1ToolsTypingLittleWorldGetUserStateInitValidateResponse200
+from .post_api_v1_tools_typing_little_world_resolve_match_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldResolveMatchCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_resolve_match_init_validate_response_200 import PostApiV1ToolsTypingLittleWorldResolveMatchInitValidateResponse200
+from .post_api_v1_tools_typing_little_world_retrieve_match_overview_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldRetrieveMatchOverviewCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_retrieve_match_overview_init_validate_response_200 import PostApiV1ToolsTypingLittleWorldRetrieveMatchOverviewInitValidateResponse200
+from .post_api_v1_tools_typing_little_world_set_user_searching_state_call_validate_response_200 import PostApiV1ToolsTypingLittleWorldSetUserSearchingStateCallValidateResponse200
+from .post_api_v1_tools_typing_little_world_set_user_searching_state_init_validate_response_200 import PostApiV1ToolsTypingLittleWorldSetUserSearchingStateInitValidateResponse200
+from .post_api_v1_tools_typing_n8n_trigger_workflow_webhook_call_validate_response_200 import PostApiV1ToolsTypingN8NTriggerWorkflowWebhookCallValidateResponse200
+from .post_api_v1_tools_typing_n8n_trigger_workflow_webhook_init_validate_response_200 import PostApiV1ToolsTypingN8NTriggerWorkflowWebhookInitValidateResponse200
+from .post_api_v1_tools_typing_run_callback_function_call_validate_response_200 import PostApiV1ToolsTypingRunCallbackFunctionCallValidateResponse200
+from .post_api_v1_tools_typing_run_callback_function_init_validate_response_200 import PostApiV1ToolsTypingRunCallbackFunctionInitValidateResponse200
+from .post_api_v1_tools_typing_rwth_aachen_seminar_tims_auto_paper_include_exclude_call_validate_response_200 import PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200
+from .post_api_v1_tools_typing_rwth_aachen_seminar_tims_auto_paper_include_exclude_init_validate_response_200 import PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeInitValidateResponse200
+from .post_api_v1_tools_typing_tool_init_test_tool_pass_through_call_validate_response_200 import PostApiV1ToolsTypingToolInitTestToolPassThroughCallValidateResponse200
+from .post_api_v1_tools_typing_tool_init_test_tool_pass_through_init_validate_response_200 import PostApiV1ToolsTypingToolInitTestToolPassThroughInitValidateResponse200
+from .post_api_v1_tools_typing_tool_name_call_validate_body import PostApiV1ToolsTypingToolNameCallValidateBody
+from .post_api_v1_tools_typing_tool_name_init_validate_body import PostApiV1ToolsTypingToolNameInitValidateBody
+from .run_callback_function_call import RunCallbackFunctionCall
+from .run_callback_function_init import RunCallbackFunctionInit
+from .rwth_aachen_seminar_tims_auto_paper_include_exclude_call import RwthAachenSeminarTimsAutoPaperIncludeExcludeCall
+from .rwth_aachen_seminar_tims_auto_paper_include_exclude_init import RwthAachenSeminarTimsAutoPaperIncludeExcludeInit
+from .tool_init_test_tool_pass_through_call import ToolInitTestToolPassThroughCall
+from .tool_init_test_tool_pass_through_init import ToolInitTestToolPassThroughInit
 from .tools_mcp_error import ToolsMCPError
 from .tools_mcp_response import ToolsMCPResponse
 from .tools_store_tool_init_data_request import ToolsStoreToolInitDataRequest
@@ -47,8 +120,13 @@ from .tools_tool_list_item import ToolsToolListItem
 from .tools_tool_list_item_call_schema import ToolsToolListItemCallSchema
 from .tools_tool_list_item_init_schema import ToolsToolListItemInitSchema
 from .tools_tool_list_item_parameters import ToolsToolListItemParameters
+from .tools_tool_type_definition import ToolsToolTypeDefinition
+from .tools_tool_type_definition_call_schema import ToolsToolTypeDefinitionCallSchema
+from .tools_tool_type_definition_init_schema import ToolsToolTypeDefinitionInitSchema
+from .tools_tool_validate_payload_response import ToolsToolValidatePayloadResponse
 from .tools_tools_filters import ToolsToolsFilters
 from .tools_tools_list_response import ToolsToolsListResponse
+from .tools_tools_typing_response import ToolsToolsTypingResponse
 from .user_two_factor_confirm_request import UserTwoFactorConfirmRequest
 from .user_two_factor_recovery_codes_response import UserTwoFactorRecoveryCodesResponse
 from .user_two_factor_setup_response import UserTwoFactorSetupResponse
@@ -56,6 +134,18 @@ from .user_user_login import UserUserLogin
 from .user_user_register import UserUserRegister
 
 __all__ = (
+    "BotsBotDTO",
+    "BotsBotDTODefaultSharedConfig",
+    "BotsBotInteractionResponse",
+    "BotsCreateBotInteractionRequest",
+    "BotsCreateBotInteractionRequestConfigOverrides",
+    "BotsCreateBotInteractionRequestToolInit",
+    "BotsCreateBotRequest",
+    "BotsCreateBotRequestDefaultSharedConfig",
+    "BotsCreateBotResponse",
+    "BotsListedBotsPage",
+    "BotsUpdateBotRequest",
+    "BotsUpdateBotRequestDefaultSharedConfig",
     "ChatsCreateChat",
     "ChatsCreateChatSharedConfig",
     "ChatsFileAttachment",
@@ -73,16 +163,40 @@ __all__ = (
     "ContactsListedContact",
     "ContactsListedContactProfileData",
     "ContactsPaginatedContacts",
+    "CreateConfirmableActionSuggestionCall",
+    "CreateConfirmableActionSuggestionInit",
     "DatabaseMessage",
     "DatabaseUser",
     "GetApiV1InteractionsChatUuidToolsResponse200",
     "GetApiV1InteractionsChatUuidToolsResponse400",
     "GetApiV1InteractionsChatUuidToolsResponse403",
     "GetApiV1InteractionsChatUuidToolsResponse404",
+    "GetCurrentTimeCall",
+    "GetCurrentTimeConfirmedCall",
+    "GetCurrentTimeConfirmedTestingCall",
+    "GetRandomNumberCall",
+    "GetWeatherCall",
+    "LittleWorldChatReplyCall",
+    "LittleWorldChatReplyInit",
+    "LittleWorldGenerateMessageReplySuggestionCall",
+    "LittleWorldGenerateMessageReplySuggestionInit",
+    "LittleWorldGetPastMessagesCall",
+    "LittleWorldGetPastMessagesInit",
+    "LittleWorldGetUserStateCall",
+    "LittleWorldGetUserStateInit",
+    "LittleWorldResolveMatchCall",
+    "LittleWorldResolveMatchInit",
+    "LittleWorldRetrieveMatchOverviewCall",
+    "LittleWorldRetrieveMatchOverviewInit",
+    "LittleWorldSetUserSearchingStateCall",
+    "LittleWorldSetUserSearchingStateInit",
     "ModelsBotOption",
     "ModelsModelListItem",
     "ModelsModelsFilters",
     "ModelsModelsListResponse",
+    "N8NTriggerWorkflowWebhookCall",
+    "N8NTriggerWorkflowWebhookCallInputParameters",
+    "N8NTriggerWorkflowWebhookInit",
     "PostApiChatChatUuidUnpublishResponse200",
     "PostApiV1InteractionsChatUuidToolsInitResponse200",
     "PostApiV1InteractionsChatUuidToolsInitResponse400",
@@ -91,6 +205,43 @@ __all__ = (
     "PostApiV1InteractionsChatUuidToolsToolNameResponse400",
     "PostApiV1InteractionsChatUuidToolsToolNameResponse403",
     "PostApiV1InteractionsChatUuidToolsToolNameResponse404",
+    "PostApiV1ToolsTypingCreateConfirmableActionSuggestionCallValidateResponse200",
+    "PostApiV1ToolsTypingCreateConfirmableActionSuggestionInitValidateResponse200",
+    "PostApiV1ToolsTypingGetCurrentTimeCallValidateResponse200",
+    "PostApiV1ToolsTypingGetCurrentTimeConfirmedCallValidateResponse200",
+    "PostApiV1ToolsTypingGetCurrentTimeConfirmedTestingCallValidateResponse200",
+    "PostApiV1ToolsTypingGetRandomNumberCallValidateResponse200",
+    "PostApiV1ToolsTypingGetWeatherCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldChatReplyCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldChatReplyInitValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldGenerateMessageReplySuggestionInitValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldGetPastMessagesCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldGetPastMessagesInitValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldGetUserStateCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldGetUserStateInitValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldResolveMatchCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldResolveMatchInitValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldRetrieveMatchOverviewCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldRetrieveMatchOverviewInitValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldSetUserSearchingStateCallValidateResponse200",
+    "PostApiV1ToolsTypingLittleWorldSetUserSearchingStateInitValidateResponse200",
+    "PostApiV1ToolsTypingN8NTriggerWorkflowWebhookCallValidateResponse200",
+    "PostApiV1ToolsTypingN8NTriggerWorkflowWebhookInitValidateResponse200",
+    "PostApiV1ToolsTypingRunCallbackFunctionCallValidateResponse200",
+    "PostApiV1ToolsTypingRunCallbackFunctionInitValidateResponse200",
+    "PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeCallValidateResponse200",
+    "PostApiV1ToolsTypingRwthAachenSeminarTimsAutoPaperIncludeExcludeInitValidateResponse200",
+    "PostApiV1ToolsTypingToolInitTestToolPassThroughCallValidateResponse200",
+    "PostApiV1ToolsTypingToolInitTestToolPassThroughInitValidateResponse200",
+    "PostApiV1ToolsTypingToolNameCallValidateBody",
+    "PostApiV1ToolsTypingToolNameInitValidateBody",
+    "RunCallbackFunctionCall",
+    "RunCallbackFunctionInit",
+    "RwthAachenSeminarTimsAutoPaperIncludeExcludeCall",
+    "RwthAachenSeminarTimsAutoPaperIncludeExcludeInit",
+    "ToolInitTestToolPassThroughCall",
+    "ToolInitTestToolPassThroughInit",
     "ToolsMCPError",
     "ToolsMCPResponse",
     "ToolsStoreToolInitDataRequest",
@@ -105,6 +256,11 @@ __all__ = (
     "ToolsToolListItemParameters",
     "ToolsToolsFilters",
     "ToolsToolsListResponse",
+    "ToolsToolsTypingResponse",
+    "ToolsToolTypeDefinition",
+    "ToolsToolTypeDefinitionCallSchema",
+    "ToolsToolTypeDefinitionInitSchema",
+    "ToolsToolValidatePayloadResponse",
     "UserTwoFactorConfirmRequest",
     "UserTwoFactorRecoveryCodesResponse",
     "UserTwoFactorSetupResponse",

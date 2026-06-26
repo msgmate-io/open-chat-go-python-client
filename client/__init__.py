@@ -6,6 +6,7 @@ from .client import OpenChatClient
 from .client import OpenChatPythonClient
 from .client import PasswordAuth
 from .client import TokenAuth
+from .tool_names import ToolName
 
 __all__ = [
     "Bot",
@@ -16,4 +17,5 @@ __all__ = [
     "OpenChatPythonClient",
     "PasswordAuth",
     "TokenAuth",
+    "ToolName",
 ]
