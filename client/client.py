@@ -218,6 +218,22 @@ class InteractionSession:
     def re_run(self, message_uuid: str | None = None) -> dict[str, Any]:
         return self._client.rerun_interaction(self.uuid, message_uuid=message_uuid)
 
+    def continue_(
+        self,
+        message: str,
+        tool_init: Optional[dict[str, Any]] = None,
+        meta_data: Optional[dict[str, Any]] = None,
+    ) -> Message:
+        return self._client.continue_interaction(
+            chat_uuid=self.uuid,
+            message=message,
+            tool_init=tool_init,
+            meta_data=meta_data,
+        )
+
+
+setattr(InteractionSession, "continue", InteractionSession.continue_)
+
 
 class Bot:
     def __init__(self, client: "OpenChatClient", bot: BotsBotDTO | ContactsListedContact):
@@ -863,6 +879,33 @@ class OpenChatClient:
         if not isinstance(payload, dict):
             raise RuntimeError("rerun_interaction returned non-object response")
         return payload
+
+    def continue_interaction(
+        self,
+        chat_uuid: str,
+        message: str,
+        tool_init: Optional[dict[str, Any]] = None,
+        meta_data: Optional[dict[str, Any]] = None,
+    ) -> Message:
+        self.ensure_authenticated()
+        if not message.strip():
+            raise ValueError("message is required")
+
+        body: dict[str, Any] = {"text": message}
+        if tool_init is not None:
+            body["tool_init"] = _to_plain_data(tool_init)
+        if meta_data is not None:
+            body["meta_data"] = _to_plain_data(meta_data)
+
+        response = self._api.get_httpx_client().post(
+            f"/api/v1/chats/{chat_uuid}/messages/send",
+            json=body,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("continue_interaction returned non-object response")
+        return ChatsListedMessage.from_dict(payload)
 
     def publish_chat(self, chat_uuid: str) -> ChatsSharedChatPublishResponse:
         self.ensure_authenticated()
