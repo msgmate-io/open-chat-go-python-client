@@ -218,7 +218,7 @@ class InteractionSession:
     def re_run(self, message_uuid: str | None = None) -> dict[str, Any]:
         return self._client.rerun_interaction(self.uuid, message_uuid=message_uuid)
 
-    def continue_(
+    def continue_interaction(
         self,
         message: str,
         tool_init: Optional[dict[str, Any]] = None,
@@ -226,6 +226,18 @@ class InteractionSession:
     ) -> Message:
         return self._client.continue_interaction(
             chat_uuid=self.uuid,
+            message=message,
+            tool_init=tool_init,
+            meta_data=meta_data,
+        )
+
+    def continue_(
+        self,
+        message: str,
+        tool_init: Optional[dict[str, Any]] = None,
+        meta_data: Optional[dict[str, Any]] = None,
+    ) -> Message:
+        return self.continue_interaction(
             message=message,
             tool_init=tool_init,
             meta_data=meta_data,
@@ -867,7 +879,19 @@ class OpenChatClient:
             raise RuntimeError("list_dynamic_rest_tools returned invalid rows payload")
         return [row for row in rows if isinstance(row, dict)]
 
-    def upsert_dynamic_rest_tool(self, tool_name: str, definition: dict[str, Any]) -> dict[str, Any]:
+    def create_dynamic_rest_tool(self, definition: dict[str, Any]) -> dict[str, Any]:
+        self.ensure_authenticated()
+        response = self._api.get_httpx_client().post(
+            "/api/v1/tools/rest",
+            json=_to_plain_data(definition),
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("create_dynamic_rest_tool returned non-object response")
+        return payload
+
+    def update_dynamic_rest_tool(self, tool_name: str, definition: dict[str, Any]) -> dict[str, Any]:
         self.ensure_authenticated()
         if not tool_name.strip():
             raise ValueError("tool_name is required")
@@ -878,7 +902,7 @@ class OpenChatClient:
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
-            raise RuntimeError("upsert_dynamic_rest_tool returned non-object response")
+            raise RuntimeError("update_dynamic_rest_tool returned non-object response")
         return payload
 
     def delete_dynamic_rest_tool(self, tool_name: str) -> dict[str, Any]:
@@ -890,15 +914,6 @@ class OpenChatClient:
         payload = response.json()
         if not isinstance(payload, dict):
             raise RuntimeError("delete_dynamic_rest_tool returned non-object response")
-        return payload
-
-    def reload_dynamic_rest_tools(self) -> dict[str, Any]:
-        self.ensure_authenticated()
-        response = self._api.get_httpx_client().post("/api/v1/tools/rest/reload")
-        response.raise_for_status()
-        payload = response.json()
-        if not isinstance(payload, dict):
-            raise RuntimeError("reload_dynamic_rest_tools returned non-object response")
         return payload
 
     def _get_latest_human_message_uuid(self, chat_uuid: str) -> str:
