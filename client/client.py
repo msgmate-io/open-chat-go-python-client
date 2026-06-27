@@ -132,9 +132,17 @@ def _enum_member_name(raw: str) -> str:
 
 
 class InteractionSession:
-    def __init__(self, client: "OpenChatClient", interaction: Interaction):
+    def __init__(
+        self,
+        client: "OpenChatClient",
+        interaction: Interaction,
+        chat_share_uuid: str | None = None,
+        shared_interaction_url: str | None = None,
+    ):
         self._client = client
         self._interaction = interaction
+        self._chat_share_uuid = chat_share_uuid
+        self._shared_interaction_url = shared_interaction_url
 
     @property
     def data(self) -> Interaction:
@@ -148,7 +156,8 @@ class InteractionSession:
         return value
 
     def refresh(self) -> Interaction:
-        self._interaction = self._client.get_interaction(self.uuid)
+        self._interaction = self._client.get_interaction(uuid=self.uuid)
+        self._chat_share_uuid, self._shared_interaction_url = self._client._extract_share_fields(self._interaction)
         return self._interaction
 
     def messages(self, page: int = 1, limit: int = 40) -> MessagesPage:
@@ -184,10 +193,30 @@ class InteractionSession:
         )
 
     def publish(self) -> ChatsSharedChatPublishResponse:
-        return self._client.publish_chat(self.uuid)
+        published = self._client.publish_chat(self.uuid)
+        share_uuid = _as_str(published.chat_share_uuid)
+        if share_uuid:
+            self._chat_share_uuid = share_uuid
+            self._shared_interaction_url = f"{self._client.base_url}/interaction/{share_uuid}"
+        return published
 
     def shared_url(self) -> str:
-        return self._client.get_shared_interaction_url(self.uuid)
+        if self._shared_interaction_url:
+            return self._shared_interaction_url
+        if self._chat_share_uuid:
+            self._shared_interaction_url = f"{self._client.base_url}/interaction/{self._chat_share_uuid}"
+            return self._shared_interaction_url
+
+        published = self.publish()
+        share_uuid = _as_str(published.chat_share_uuid)
+        if not share_uuid:
+            raise RuntimeError("publish endpoint did not return chat_share_uuid")
+        self._chat_share_uuid = share_uuid
+        self._shared_interaction_url = f"{self._client.base_url}/interaction/{share_uuid}"
+        return self._shared_interaction_url
+
+    def re_run(self, message_uuid: str | None = None) -> dict[str, Any]:
+        return self._client.rerun_interaction(self.uuid, message_uuid=message_uuid)
 
 
 class Bot:
@@ -259,12 +288,14 @@ class Bot:
         message: str,
         tool_init: Optional[dict[str, Any]] = None,
         overrides: Optional[dict[str, Any]] = None,
+        share: bool = False,
     ) -> InteractionSession:
         return self._client.create_interaction_for_bot(
             bot=self,
             message=message,
             tool_init=tool_init,
             overrides=overrides,
+            share=share,
         )
 
 
@@ -322,6 +353,13 @@ class OpenChatClient:
     def ensure_authenticated(self) -> None:
         if not self._logged_in:
             self.login()
+
+    def _extract_share_fields(self, interaction: Interaction) -> tuple[str | None, str | None]:
+        share_uuid = _as_str(interaction.chat_share_uuid)
+        share_url = _as_str(interaction.shared_interaction_url)
+        if share_uuid:
+            return share_uuid, share_url or f"{self.base_url}/interaction/{share_uuid}"
+        return None, None
 
     def me(self) -> DatabaseUser:
         self.ensure_authenticated()
@@ -506,6 +544,7 @@ class OpenChatClient:
         message: str,
         tool_init: Optional[dict[str, Any]] = None,
         overrides: Optional[dict[str, Any]] = None,
+        share: bool = False,
     ) -> InteractionSession:
         self.ensure_authenticated()
         effective_overrides = _to_plain_data(dict(self._default_interaction_overrides))
@@ -523,28 +562,46 @@ class OpenChatClient:
                 chat_type="interaction",
                 shared_config=ChatsCreateChatSharedConfig.from_dict(legacy_effective_config),
             )
+            if share:
+                legacy_body["auto_share"] = True
             legacy_response = post_api_v1_chats_create.sync_detailed(client=self._api, body=legacy_body)
             legacy_parsed = _expect_ok(legacy_response.parsed, int(legacy_response.status_code), "create_interaction_for_bot")
             if not isinstance(legacy_parsed, ChatsListedChat):
                 raise RuntimeError(f"create_interaction_for_bot returned unexpected type: {type(legacy_parsed)!r}")
             if not _is_unset(legacy_parsed.uuid):
                 self._last_chat_uuid = legacy_parsed.uuid
-            return InteractionSession(client=self, interaction=legacy_parsed)
+            share_uuid, share_url = self._extract_share_fields(legacy_parsed)
+            return InteractionSession(client=self, interaction=legacy_parsed, chat_share_uuid=share_uuid, shared_interaction_url=share_url)
 
         body = BotsCreateBotInteractionRequest(
             message=message,
             tool_init=BotsCreateBotInteractionRequestToolInit.from_dict(_to_plain_data(tool_init or {})),
             config_overrides=BotsCreateBotInteractionRequestConfigOverrides.from_dict(effective_overrides),
         )
+        if share:
+            body["auto_share"] = True
         response = post_api_v1_bots_identifier_interactions.sync_detailed(client=self._api, identifier=bot.uuid or bot.name, body=body)
         parsed = _expect_ok(response.parsed, int(response.status_code), "create_interaction_for_bot")
         if not isinstance(parsed, BotsBotInteractionResponse) or _is_unset(parsed.chat_uuid):
             raise RuntimeError(f"create_interaction_for_bot returned unexpected type: {type(parsed)!r}")
         chat_uuid = _as_str(parsed.chat_uuid)
-        interaction = self.get_interaction(chat_uuid)
+        share_uuid = _as_str(parsed.additional_properties.get("chat_share_uuid")) or None
+        share_url = _as_str(parsed.additional_properties.get("shared_interaction_url")) or None
+        if not share_uuid:
+            chat_share_payload = parsed.additional_properties.get("chat_share")
+            if isinstance(chat_share_payload, dict):
+                share_uuid = _as_str(chat_share_payload.get("chat_share_uuid")) or None
+        if share_uuid and not share_url:
+            share_url = f"{self.base_url}/interaction/{share_uuid}"
+
+        interaction = self.get_interaction(uuid=chat_uuid)
         if not _is_unset(interaction.uuid):
             self._last_chat_uuid = interaction.uuid
-        return InteractionSession(client=self, interaction=interaction)
+        if not share_uuid or not share_url:
+            fetched_share_uuid, fetched_share_url = self._extract_share_fields(interaction)
+            share_uuid = share_uuid or fetched_share_uuid
+            share_url = share_url or fetched_share_url
+        return InteractionSession(client=self, interaction=interaction, chat_share_uuid=share_uuid, shared_interaction_url=share_url)
 
     def interact(
         self,
@@ -552,21 +609,25 @@ class OpenChatClient:
         bot: str = "bot",
         tool_init: Optional[dict[str, Any]] = None,
         overrides: Optional[dict[str, Any]] = None,
+        share: bool = False,
     ) -> InteractionSession:
         return self.get_bot(bot).create_interaction(
             message=message,
             tool_init=tool_init,
             overrides=overrides,
+            share=share,
         )
 
     def create_interaction(
         self,
         tool_init: Optional[dict[str, Any]] = None,
         message: str = "",
+        share: bool = False,
     ) -> Interaction:
         interaction = self.get_bot("bot").create_interaction(
             message=message,
             tool_init=tool_init,
+            share=share,
         )
         return interaction.data
 
@@ -603,16 +664,41 @@ class OpenChatClient:
     def get_interactions(self, page: int = 1, limit: int = 40, all_pages: bool = True) -> InteractionsPage:
         return self.list_interactions(page=page, limit=limit, all_pages=all_pages)
 
-    def get_interaction(self, chat_uuid: str) -> Interaction:
+    def get_interaction(
+        self,
+        uuid: str | None = None,
+        *,
+        message: str | None = None,
+        bot: str = "bot",
+        tool_init: Optional[dict[str, Any]] = None,
+        overrides: Optional[dict[str, Any]] = None,
+        share: bool = False,
+    ) -> Interaction | InteractionSession:
+        if message is not None:
+            return self.interact(
+                message=message,
+                bot=bot,
+                tool_init=tool_init,
+                overrides=overrides,
+                share=share,
+            )
+
+        if not uuid:
+            raise ValueError("get_interaction requires either uuid=... or message=...")
+
         self.ensure_authenticated()
-        response = get_api_v1_chats_chat_uuid.sync_detailed(client=self._api, chat_uuid=chat_uuid)
+        response = get_api_v1_chats_chat_uuid.sync_detailed(client=self._api, chat_uuid=uuid)
         parsed = _expect_ok(response.parsed, int(response.status_code), "get_interaction")
         if not isinstance(parsed, ChatsListedChat):
             raise RuntimeError(f"get_interaction returned unexpected type: {type(parsed)!r}")
         return parsed
 
     def interaction(self, chat_uuid: str) -> InteractionSession:
-        return InteractionSession(client=self, interaction=self.get_interaction(chat_uuid))
+        interaction = self.get_interaction(uuid=chat_uuid)
+        if not isinstance(interaction, ChatsListedChat):
+            raise RuntimeError("interaction lookup returned unexpected payload")
+        share_uuid, share_url = self._extract_share_fields(interaction)
+        return InteractionSession(client=self, interaction=interaction, chat_share_uuid=share_uuid, shared_interaction_url=share_url)
 
     def list_interaction_messages(self, chat_uuid: str, page: int = 1, limit: int = 40) -> MessagesPage:
         self.ensure_authenticated()
@@ -751,6 +837,31 @@ class OpenChatClient:
         payload = response.json()
         if not isinstance(payload, dict):
             raise RuntimeError("execute_confirm_action returned non-object response")
+        return payload
+
+    def _get_latest_human_message_uuid(self, chat_uuid: str) -> str:
+        payload = self.list_interaction_messages(chat_uuid=chat_uuid, page=1, limit=200)
+        rows = [] if _is_unset(payload.rows) else payload.rows
+        for row in rows:
+            sender_is_automated = False if _is_unset(row.sender_is_automated) else bool(row.sender_is_automated)
+            data_type = _as_str(row.data_type)
+            if sender_is_automated:
+                continue
+            if data_type == "event":
+                continue
+            message_uuid = _as_str(row.uuid)
+            if message_uuid:
+                return message_uuid
+        raise RuntimeError(f"no human message found in interaction {chat_uuid}")
+
+    def rerun_interaction(self, chat_uuid: str, message_uuid: str | None = None) -> dict[str, Any]:
+        self.ensure_authenticated()
+        target_message_uuid = message_uuid or self._get_latest_human_message_uuid(chat_uuid)
+        response = self._api.get_httpx_client().post(f"/api/v1/chats/{chat_uuid}/messages/{target_message_uuid}/rerun")
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("rerun_interaction returned non-object response")
         return payload
 
     def publish_chat(self, chat_uuid: str) -> ChatsSharedChatPublishResponse:
