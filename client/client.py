@@ -857,7 +857,7 @@ class OpenChatClient:
 
     def list_dynamic_rest_tools(self) -> list[dict[str, Any]]:
         self.ensure_authenticated()
-        response = self._api.get_httpx_client().get("/api/v1/admin/tools/rest")
+        response = self._api.get_httpx_client().get("/api/v1/tools/rest")
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
@@ -872,7 +872,7 @@ class OpenChatClient:
         if not tool_name.strip():
             raise ValueError("tool_name is required")
         response = self._api.get_httpx_client().put(
-            f"/api/v1/admin/tools/rest/{tool_name}",
+            f"/api/v1/tools/rest/{tool_name}",
             json=_to_plain_data(definition),
         )
         response.raise_for_status()
@@ -885,7 +885,7 @@ class OpenChatClient:
         self.ensure_authenticated()
         if not tool_name.strip():
             raise ValueError("tool_name is required")
-        response = self._api.get_httpx_client().delete(f"/api/v1/admin/tools/rest/{tool_name}")
+        response = self._api.get_httpx_client().delete(f"/api/v1/tools/rest/{tool_name}")
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
@@ -894,7 +894,7 @@ class OpenChatClient:
 
     def reload_dynamic_rest_tools(self) -> dict[str, Any]:
         self.ensure_authenticated()
-        response = self._api.get_httpx_client().post("/api/v1/admin/tools/rest/reload")
+        response = self._api.get_httpx_client().post("/api/v1/tools/rest/reload")
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
