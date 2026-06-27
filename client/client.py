@@ -855,6 +855,52 @@ class OpenChatClient:
             raise RuntimeError("execute_confirm_action returned non-object response")
         return payload
 
+    def list_dynamic_rest_tools(self) -> list[dict[str, Any]]:
+        self.ensure_authenticated()
+        response = self._api.get_httpx_client().get("/api/v1/admin/tools/rest")
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("list_dynamic_rest_tools returned non-object response")
+        rows = payload.get("rows", [])
+        if not isinstance(rows, list):
+            raise RuntimeError("list_dynamic_rest_tools returned invalid rows payload")
+        return [row for row in rows if isinstance(row, dict)]
+
+    def upsert_dynamic_rest_tool(self, tool_name: str, definition: dict[str, Any]) -> dict[str, Any]:
+        self.ensure_authenticated()
+        if not tool_name.strip():
+            raise ValueError("tool_name is required")
+        response = self._api.get_httpx_client().put(
+            f"/api/v1/admin/tools/rest/{tool_name}",
+            json=_to_plain_data(definition),
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("upsert_dynamic_rest_tool returned non-object response")
+        return payload
+
+    def delete_dynamic_rest_tool(self, tool_name: str) -> dict[str, Any]:
+        self.ensure_authenticated()
+        if not tool_name.strip():
+            raise ValueError("tool_name is required")
+        response = self._api.get_httpx_client().delete(f"/api/v1/admin/tools/rest/{tool_name}")
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("delete_dynamic_rest_tool returned non-object response")
+        return payload
+
+    def reload_dynamic_rest_tools(self) -> dict[str, Any]:
+        self.ensure_authenticated()
+        response = self._api.get_httpx_client().post("/api/v1/admin/tools/rest/reload")
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise RuntimeError("reload_dynamic_rest_tools returned non-object response")
+        return payload
+
     def _get_latest_human_message_uuid(self, chat_uuid: str) -> str:
         payload = self.list_interaction_messages(chat_uuid=chat_uuid, page=1, limit=200)
         rows = [] if _is_unset(payload.rows) else payload.rows
