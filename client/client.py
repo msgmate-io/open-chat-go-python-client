@@ -7,6 +7,9 @@ from enum import StrEnum
 from typing import Any, Optional
 from urllib.parse import urlparse
 
+import httpx
+
+from .rest_tool_builder import RESTToolBuilder
 from .generated_api import Client as GeneratedClient
 from .generated_api.api.bots import (
     delete_api_v1_bots_identifier,
@@ -230,21 +233,6 @@ class InteractionSession:
             tool_init=tool_init,
             meta_data=meta_data,
         )
-
-    def continue_(
-        self,
-        message: str,
-        tool_init: Optional[dict[str, Any]] = None,
-        meta_data: Optional[dict[str, Any]] = None,
-    ) -> Message:
-        return self.continue_interaction(
-            message=message,
-            tool_init=tool_init,
-            meta_data=meta_data,
-        )
-
-
-setattr(InteractionSession, "continue", InteractionSession.continue_)
 
 
 class Bot:
@@ -891,6 +879,21 @@ class OpenChatClient:
             raise RuntimeError("create_dynamic_rest_tool returned non-object response")
         return payload
 
+    def save_dynamic_rest_tool(self, definition: dict[str, Any] | RESTToolBuilder) -> dict[str, Any]:
+        payload = definition.build() if isinstance(definition, RESTToolBuilder) else definition
+        payload = _to_plain_data(payload)
+        if not isinstance(payload, dict):
+            raise ValueError("definition must be a dict or RESTToolBuilder")
+        tool_name = str(payload.get("name", "")).strip()
+        if not tool_name:
+            raise ValueError("definition.name is required")
+        try:
+            return self.create_dynamic_rest_tool(payload)
+        except httpx.HTTPStatusError as exc:
+            if exc.response is not None and exc.response.status_code == 409:
+                return self.update_dynamic_rest_tool(tool_name, payload)
+            raise
+
     def update_dynamic_rest_tool(self, tool_name: str, definition: dict[str, Any]) -> dict[str, Any]:
         self.ensure_authenticated()
         if not tool_name.strip():
@@ -982,11 +985,6 @@ class OpenChatClient:
         if not share_uuid:
             raise RuntimeError("publish endpoint did not return chat_share_uuid")
         return f"{self.base_url}/interaction/{share_uuid}"
-
-
-# Alias for previous class name.
-OpenChatPythonClient = OpenChatClient
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Open-Chat Python client")

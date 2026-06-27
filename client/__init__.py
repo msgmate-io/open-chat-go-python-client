@@ -3,9 +3,9 @@ from .client import Interaction
 from .client import InteractionSession
 from .client import InteractionsPage
 from .client import OpenChatClient
-from .client import OpenChatPythonClient
 from .client import PasswordAuth
 from .client import TokenAuth
+from .rest_tool_builder import RESTToolBuilder
 from .tool_names import ToolName
 
 __all__ = [
@@ -14,8 +14,8 @@ __all__ = [
     "InteractionSession",
     "InteractionsPage",
     "OpenChatClient",
-    "OpenChatPythonClient",
     "PasswordAuth",
+    "RESTToolBuilder",
     "TokenAuth",
     "ToolName",
 ]
