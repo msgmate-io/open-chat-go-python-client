@@ -290,6 +290,19 @@ class RESTToolBuilder:
         self._safety_policy["max_response_body_bytes"] = int(limit)
         return self
 
+    def censor_response_paths(self, *paths: str) -> "RESTToolBuilder":
+        values: list[str] = []
+        for path in paths:
+            trimmed = path.strip()
+            if trimmed:
+                values.append(trimmed)
+        self._safety_policy["response_censor_paths"] = values
+        return self
+
+    def clear_response_censor_paths(self) -> "RESTToolBuilder":
+        self._safety_policy.pop("response_censor_paths", None)
+        return self
+
     def enabled(self, value: bool = True) -> "RESTToolBuilder":
         self._enabled = bool(value)
         return self
