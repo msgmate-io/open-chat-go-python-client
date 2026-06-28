@@ -3,7 +3,7 @@
 This package now has two layers:
 
 - Typed base client generated from backend API docs (`backend/server/swagger.json`) via `openapi-python-client`
-- Handwritten `OpenChatPythonClient` wrapper in `client/client.py` for higher-level workflows
+- Handwritten `OpenChatClient` wrapper in `client/client.py` for higher-level workflows
 
 Breaking change: the wrapper is now typed-first and returns model objects (not dict payloads).
 
@@ -79,7 +79,7 @@ Recommended clean usage options:
 
 - `client.interact("...")` for fastest path
 - `client.get_default_bot().create_interaction(...)` when explicit bot handle helps
-- `client.get_bot("little_world_chat").create_interaction(...)` when selecting named bots
+- `client.get_bot("support_agent").create_interaction(...)` when selecting named bots
 
 Regenerate the typed base client:
 
@@ -91,34 +91,24 @@ The generator script converts Swagger 2.0 to OpenAPI 3.0 with `swagger2openapi`,
 
 Tool call/init payload types are now generated automatically as model classes.
 
-Example (typed init + typed call validation):
+Example (typed call validation):
 
 ```python
 from client.client import OpenChatClient, PasswordAuth
-from client.generated_api.api.tools.post_api_v1_tools_typing_little_world_chat_reply_call_validate import sync as validate_reply_call
-from client.generated_api.models.little_world_chat_reply_call import LittleWorldChatReplyCall
-from client.generated_api.models.little_world_chat_reply_init import LittleWorldChatReplyInit
+from client.generated_api.api.tools.post_api_v1_tools_typing_get_weather_call_validate import sync as validate_weather_call
+from client.generated_api.models.get_weather_call import GetWeatherCall
 
 client = OpenChatClient(base_url="http://localhost:1984", auth=PasswordAuth("admin", "password"))
 client.login()
 
-# Typed tool init object passed directly (wrapper auto-converts via .to_dict())
-reply_init = LittleWorldChatReplyInit(
-    api_host="https://app.littleworld.com",
-    chat_uuid="chat-uuid",
-    csrf_token="csrf",
-    session_id="session",
-)
-
 interaction = client.get_bot("bot").create_interaction(
-    message="Reply politely",
-    overrides={"tools": [ToolName.LITTLE_WORLD_CHAT_REPLY]},
-    tool_init={ToolName.LITTLE_WORLD_CHAT_REPLY: reply_init},
+    message="Should I carry an umbrella in Berlin today?",
+    overrides={"tools": [ToolName.GET_WEATHER]},
 )
 
 # Typed call payload class from generated OpenAPI models
-typed_call = LittleWorldChatReplyCall(message="Thanks for reaching out!")
-validate_reply_call(client=client._api, body=typed_call)
+typed_call = GetWeatherCall(location="Berlin")
+validate_weather_call(client=client._api, body=typed_call)
 ```
 
 If you want tool names fetched from the server at runtime (no hardcoded list), use:
@@ -128,5 +118,5 @@ runtime_tools = client.list_tool_names()
 ToolNameDynamic = client.get_tool_name_enum()
 
 print(runtime_tools)
-print(ToolNameDynamic.LITTLE_WORLD_CHAT_REPLY)
+print(ToolNameDynamic.GET_WEATHER)
 ```

@@ -1,5 +1,116 @@
 import json
+import copy
 from typing import Any
+
+
+def _extract_ref_schema_name(ref: str) -> str | None:
+    prefix = "#/components/schemas/"
+    if ref.startswith(prefix):
+        return ref[len(prefix) :]
+    return None
+
+
+def _collect_schema_refs(value: Any, refs: set[str]) -> None:
+    if isinstance(value, dict):
+        ref_name = _extract_ref_schema_name(str(value.get("$ref", "")))
+        if ref_name:
+            refs.add(ref_name)
+        for nested in value.values():
+            _collect_schema_refs(nested, refs)
+    elif isinstance(value, list):
+        for item in value:
+            _collect_schema_refs(item, refs)
+
+
+def _collect_component_schemas(document: dict[str, Any], schema_names: tuple[str, ...]) -> dict[str, Any]:
+    all_schemas = document.get("components", {}).get("schemas", {})
+    if not isinstance(all_schemas, dict):
+        return {}
+
+    collected: dict[str, Any] = {}
+    pending = list(dict.fromkeys(schema_names))
+    seen: set[str] = set()
+
+    while pending:
+        name = pending.pop()
+        if name in seen or name not in all_schemas:
+            continue
+        seen.add(name)
+        component = copy.deepcopy(all_schemas[name])
+        collected[name] = component
+
+        nested_refs: set[str] = set()
+        _collect_schema_refs(component, nested_refs)
+        pending.extend(sorted(nested_refs - seen))
+
+    if not collected:
+        return {}
+    return {"schemas": collected}
+
+
+def reduce_openapi_to_endpoint(
+    document: dict[str, Any] | str,
+    *,
+    path: str,
+    method: str,
+    info_title: str | None = None,
+    info_version: str = "1.0.0",
+    extra_parameters: list[dict[str, Any]] | None = None,
+    request_body: dict[str, Any] | None = None,
+    component_schema_names: tuple[str, ...] = (),
+    keep_responses: bool = False,
+    servers: list[dict[str, Any]] | None = None,
+) -> tuple[str, dict[str, Any]]:
+    source = json.loads(document) if isinstance(document, str) else copy.deepcopy(document)
+    selected_path = path.strip()
+    selected_method = method.strip().lower()
+
+    if not selected_path:
+        raise ValueError("path is required")
+    if not selected_method:
+        raise ValueError("method is required")
+
+    path_item = source.get("paths", {}).get(selected_path)
+    if not isinstance(path_item, dict):
+        raise RuntimeError(f"OpenAPI path not found: {selected_path}")
+
+    operation = copy.deepcopy(path_item.get(selected_method, {}))
+    if not isinstance(operation, dict):
+        operation = {}
+    operation_id = str(operation.get("operationId", "")).strip()
+    if not operation_id:
+        raise RuntimeError(f"OpenAPI operation missing operationId: {selected_path} {selected_method}")
+
+    merged_params: list[Any] = []
+    if isinstance(path_item.get("parameters"), list):
+        merged_params.extend(copy.deepcopy(path_item["parameters"]))
+    if isinstance(operation.get("parameters"), list):
+        merged_params.extend(copy.deepcopy(operation["parameters"]))
+    if extra_parameters:
+        merged_params.extend(copy.deepcopy(extra_parameters))
+    operation["parameters"] = merged_params
+
+    if request_body is not None:
+        operation["requestBody"] = copy.deepcopy(request_body)
+    if not keep_responses:
+        operation.pop("responses", None)
+
+    referenced_schema_names: set[str] = set(component_schema_names)
+    _collect_schema_refs(operation, referenced_schema_names)
+    components = _collect_component_schemas(source, tuple(sorted(referenced_schema_names)))
+
+    reduced_doc: dict[str, Any] = {
+        "openapi": source.get("openapi", "3.0.3"),
+        "info": {
+            "title": (info_title.strip() if isinstance(info_title, str) and info_title.strip() else "API"),
+            "version": info_version,
+        },
+        "paths": {selected_path: {selected_method: operation}},
+        "components": components,
+    }
+    if servers is not None:
+        reduced_doc["servers"] = copy.deepcopy(servers)
+    return operation_id, reduced_doc
 
 
 class RESTToolBindingBuilder:
@@ -78,6 +189,34 @@ class RESTToolBuilder:
         self._openapi_source = source
         return self
 
+    def openapi_endpoint(
+        self,
+        document: dict[str, Any] | str,
+        *,
+        path: str,
+        method: str,
+        info_title: str | None = None,
+        info_version: str = "1.0.0",
+        extra_parameters: list[dict[str, Any]] | None = None,
+        request_body: dict[str, Any] | None = None,
+        component_schema_names: tuple[str, ...] = (),
+        keep_responses: bool = False,
+        servers: list[dict[str, Any]] | None = None,
+    ) -> "RESTToolBuilder":
+        operation_id, reduced_doc = reduce_openapi_to_endpoint(
+            document,
+            path=path,
+            method=method,
+            info_title=info_title,
+            info_version=info_version,
+            extra_parameters=extra_parameters,
+            request_body=request_body,
+            component_schema_names=component_schema_names,
+            keep_responses=keep_responses,
+            servers=servers,
+        )
+        return self.openapi_inline(reduced_doc).operation(operation_id)
+
     def operation(self, operation_id: str) -> "RESTToolBuilder":
         value = operation_id.strip()
         if not value:
@@ -117,6 +256,22 @@ class RESTToolBuilder:
 
     def bind_call(self, input_name: str) -> RESTToolBindingBuilder:
         return RESTToolBindingBuilder(parent=self, input_name=input_name, source="call")
+
+    def bind_session_auth(
+        self,
+        *,
+        cookie_input: str = "cookie_header",
+        csrf_input: str = "csrf_token",
+        cookie_header_name: str = "Cookie",
+        csrf_header_name: str = "X-CSRFToken",
+    ) -> "RESTToolBuilder":
+        return self.bind_init(cookie_input).to_header(cookie_header_name).bind_init(csrf_input).to_header(csrf_header_name)
+
+    def allow_hostname_policy(self, hostname: str) -> "RESTToolBuilder":
+        host = hostname.strip().lower()
+        if not host:
+            raise ValueError("hostname is required")
+        return self.allow_hosts(host).allow_private_ips(host in {"localhost", "host.docker.internal", "127.0.0.1"})
 
     def allow_hosts(self, *hosts: str) -> "RESTToolBuilder":
         values = [host.strip().lower() for host in hosts if host.strip()]

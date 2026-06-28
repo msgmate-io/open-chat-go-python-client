@@ -42,20 +42,6 @@ from .get_current_time_confirmed_call import GetCurrentTimeConfirmedCall
 from .get_current_time_confirmed_testing_call import GetCurrentTimeConfirmedTestingCall
 from .get_random_number_call import GetRandomNumberCall
 from .get_weather_call import GetWeatherCall
-from .little_world_chat_reply_call import LittleWorldChatReplyCall
-from .little_world_chat_reply_init import LittleWorldChatReplyInit
-from .little_world_generate_message_reply_suggestion_call import LittleWorldGenerateMessageReplySuggestionCall
-from .little_world_generate_message_reply_suggestion_init import LittleWorldGenerateMessageReplySuggestionInit
-from .little_world_get_past_messages_call import LittleWorldGetPastMessagesCall
-from .little_world_get_past_messages_init import LittleWorldGetPastMessagesInit
-from .little_world_get_user_state_call import LittleWorldGetUserStateCall
-from .little_world_get_user_state_init import LittleWorldGetUserStateInit
-from .little_world_resolve_match_call import LittleWorldResolveMatchCall
-from .little_world_resolve_match_init import LittleWorldResolveMatchInit
-from .little_world_retrieve_match_overview_call import LittleWorldRetrieveMatchOverviewCall
-from .little_world_retrieve_match_overview_init import LittleWorldRetrieveMatchOverviewInit
-from .little_world_set_user_searching_state_call import LittleWorldSetUserSearchingStateCall
-from .little_world_set_user_searching_state_init import LittleWorldSetUserSearchingStateInit
 from .models_bot_option import ModelsBotOption
 from .models_model_list_item import ModelsModelListItem
 from .models_models_filters import ModelsModelsFilters
@@ -75,8 +61,6 @@ from .post_api_v1_tools_typing_tool_name_call_validate_body import PostApiV1Tool
 from .post_api_v1_tools_typing_tool_name_init_validate_body import PostApiV1ToolsTypingToolNameInitValidateBody
 from .run_callback_function_call import RunCallbackFunctionCall
 from .run_callback_function_init import RunCallbackFunctionInit
-from .rwth_aachen_seminar_tims_auto_paper_include_exclude_call import RwthAachenSeminarTimsAutoPaperIncludeExcludeCall
-from .rwth_aachen_seminar_tims_auto_paper_include_exclude_init import RwthAachenSeminarTimsAutoPaperIncludeExcludeInit
 from .tool_init_test_tool_pass_through_call import ToolInitTestToolPassThroughCall
 from .tool_init_test_tool_pass_through_init import ToolInitTestToolPassThroughInit
 from .tools_mcp_error import ToolsMCPError
@@ -147,20 +131,6 @@ __all__ = (
     "GetCurrentTimeConfirmedTestingCall",
     "GetRandomNumberCall",
     "GetWeatherCall",
-    "LittleWorldChatReplyCall",
-    "LittleWorldChatReplyInit",
-    "LittleWorldGenerateMessageReplySuggestionCall",
-    "LittleWorldGenerateMessageReplySuggestionInit",
-    "LittleWorldGetPastMessagesCall",
-    "LittleWorldGetPastMessagesInit",
-    "LittleWorldGetUserStateCall",
-    "LittleWorldGetUserStateInit",
-    "LittleWorldResolveMatchCall",
-    "LittleWorldResolveMatchInit",
-    "LittleWorldRetrieveMatchOverviewCall",
-    "LittleWorldRetrieveMatchOverviewInit",
-    "LittleWorldSetUserSearchingStateCall",
-    "LittleWorldSetUserSearchingStateInit",
     "ModelsBotOption",
     "ModelsModelListItem",
     "ModelsModelsFilters",
@@ -180,8 +150,6 @@ __all__ = (
     "PostApiV1ToolsTypingToolNameInitValidateBody",
     "RunCallbackFunctionCall",
     "RunCallbackFunctionInit",
-    "RwthAachenSeminarTimsAutoPaperIncludeExcludeCall",
-    "RwthAachenSeminarTimsAutoPaperIncludeExcludeInit",
     "ToolInitTestToolPassThroughCall",
     "ToolInitTestToolPassThroughInit",
     "ToolsMCPError",

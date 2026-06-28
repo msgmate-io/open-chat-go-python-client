@@ -92,19 +92,10 @@ Tool names:
 
 ```python
 from client import ToolName
-from client.generated_api.models.little_world_chat_reply_init import LittleWorldChatReplyInit
 
 interaction = client.get_bot("support_agent").create_interaction(
-    message="Reply politely",
-    overrides={"tools": [ToolName.LITTLE_WORLD_CHAT_REPLY]},
-    tool_init={
-        ToolName.LITTLE_WORLD_CHAT_REPLY: LittleWorldChatReplyInit(
-            api_host="https://app.littleworld.com",
-            chat_uuid="chat-uuid",
-            csrf_token="csrf",
-            session_id="session",
-        )
-    },
+    message="Weather in Berlin?",
+    overrides={"tools": [ToolName.GET_WEATHER]},
 )
 ```
 
@@ -122,16 +113,14 @@ Per-tool payload classes are auto-generated under `client/generated_api/models/`
 for example:
 
 - `get_weather_call.GetWeatherCall`
-- `little_world_chat_reply_call.LittleWorldChatReplyCall`
-- `little_world_chat_reply_init.LittleWorldChatReplyInit`
 
 You can validate typed call payloads via generated endpoints:
 
 ```python
-from client.generated_api.api.tools.post_api_v1_tools_typing_little_world_chat_reply_call_validate import sync as validate_call
-from client.generated_api.models.little_world_chat_reply_call import LittleWorldChatReplyCall
+from client.generated_api.api.tools.post_api_v1_tools_typing_get_weather_call_validate import sync as validate_call
+from client.generated_api.models.get_weather_call import GetWeatherCall
 
-payload = LittleWorldChatReplyCall(message="Hello from support")
+payload = GetWeatherCall(location="Berlin")
 validate_call(client=client._api, body=payload)
 ```
 
