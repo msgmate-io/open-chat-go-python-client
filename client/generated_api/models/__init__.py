@@ -2,6 +2,7 @@
 
 from .bots_bot_dto import BotsBotDTO
 from .bots_bot_dto_default_shared_config import BotsBotDTODefaultSharedConfig
+from .bots_bot_interaction_chat_share import BotsBotInteractionChatShare
 from .bots_bot_interaction_response import BotsBotInteractionResponse
 from .bots_create_bot_interaction_request import BotsCreateBotInteractionRequest
 from .bots_create_bot_interaction_request_config_overrides import BotsCreateBotInteractionRequestConfigOverrides
@@ -15,6 +16,7 @@ from .bots_update_bot_request_default_shared_config import BotsUpdateBotRequestD
 from .chats_create_chat import ChatsCreateChat
 from .chats_create_chat_shared_config import ChatsCreateChatSharedConfig
 from .chats_file_attachment import ChatsFileAttachment
+from .chats_interaction_status_response import ChatsInteractionStatusResponse
 from .chats_listed_chat import ChatsListedChat
 from .chats_listed_chats_page import ChatsListedChatsPage
 from .chats_listed_message import ChatsListedMessage
@@ -22,8 +24,10 @@ from .chats_listed_message_meta_data import ChatsListedMessageMetaData
 from .chats_listed_messages_page import ChatsListedMessagesPage
 from .chats_public_interaction_chat import ChatsPublicInteractionChat
 from .chats_public_interaction_chat_interaction_details import ChatsPublicInteractionChatInteractionDetails
+from .chats_rerun_message_response import ChatsRerunMessageResponse
 from .chats_send_message import ChatsSendMessage
 from .chats_send_message_meta_data import ChatsSendMessageMetaData
+from .chats_send_message_tool_init import ChatsSendMessageToolInit
 from .chats_shared_chat_publish_response import ChatsSharedChatPublishResponse
 from .contacts_add_contact import ContactsAddContact
 from .contacts_listed_contact import ContactsListedContact
@@ -59,6 +63,7 @@ from .post_api_v1_interactions_chat_uuid_tools_tool_name_response_403 import Pos
 from .post_api_v1_interactions_chat_uuid_tools_tool_name_response_404 import PostApiV1InteractionsChatUuidToolsToolNameResponse404
 from .post_api_v1_tools_typing_tool_name_call_validate_body import PostApiV1ToolsTypingToolNameCallValidateBody
 from .post_api_v1_tools_typing_tool_name_init_validate_body import PostApiV1ToolsTypingToolNameInitValidateBody
+from .put_api_v1_bots_identifier_config_body import PutApiV1BotsIdentifierConfigBody
 from .run_callback_function_call import RunCallbackFunctionCall
 from .run_callback_function_init import RunCallbackFunctionInit
 from .tool_init_test_tool_pass_through_call import ToolInitTestToolPassThroughCall
@@ -91,6 +96,7 @@ from .user_user_register import UserUserRegister
 __all__ = (
     "BotsBotDTO",
     "BotsBotDTODefaultSharedConfig",
+    "BotsBotInteractionChatShare",
     "BotsBotInteractionResponse",
     "BotsCreateBotInteractionRequest",
     "BotsCreateBotInteractionRequestConfigOverrides",
@@ -104,6 +110,7 @@ __all__ = (
     "ChatsCreateChat",
     "ChatsCreateChatSharedConfig",
     "ChatsFileAttachment",
+    "ChatsInteractionStatusResponse",
     "ChatsListedChat",
     "ChatsListedChatsPage",
     "ChatsListedMessage",
@@ -111,8 +118,10 @@ __all__ = (
     "ChatsListedMessagesPage",
     "ChatsPublicInteractionChat",
     "ChatsPublicInteractionChatInteractionDetails",
+    "ChatsRerunMessageResponse",
     "ChatsSendMessage",
     "ChatsSendMessageMetaData",
+    "ChatsSendMessageToolInit",
     "ChatsSharedChatPublishResponse",
     "ContactsAddContact",
     "ContactsListedContact",
@@ -148,6 +157,7 @@ __all__ = (
     "PostApiV1InteractionsChatUuidToolsToolNameResponse404",
     "PostApiV1ToolsTypingToolNameCallValidateBody",
     "PostApiV1ToolsTypingToolNameInitValidateBody",
+    "PutApiV1BotsIdentifierConfigBody",
     "RunCallbackFunctionCall",
     "RunCallbackFunctionInit",
     "ToolInitTestToolPassThroughCall",

@@ -20,7 +20,9 @@ from .generated_api.api.bots import (
     post_api_v1_bots_identifier_interactions,
 )
 from .generated_api.api.chats import (
+    get_api_interaction_chat_share_uuid_status,
     get_api_v1_chats_chat_uuid,
+    get_api_v1_chats_chat_uuid_status,
     get_api_v1_chats_list,
     post_api_chat_chat_uuid_publish,
     post_api_v1_chats_create,
@@ -43,6 +45,7 @@ from .generated_api.models.bots_update_bot_request import BotsUpdateBotRequest
 from .generated_api.models.bots_update_bot_request_default_shared_config import BotsUpdateBotRequestDefaultSharedConfig
 from .generated_api.models.chats_listed_chat import ChatsListedChat
 from .generated_api.models.chats_listed_chats_page import ChatsListedChatsPage
+from .generated_api.models.chats_interaction_status_response import ChatsInteractionStatusResponse
 from .generated_api.models.chats_listed_message import ChatsListedMessage
 from .generated_api.models.chats_listed_messages_page import ChatsListedMessagesPage
 from .generated_api.models.chats_create_chat import ChatsCreateChat
@@ -70,6 +73,7 @@ Interaction = ChatsListedChat
 InteractionsPage = ChatsListedChatsPage
 Message = ChatsListedMessage
 MessagesPage = ChatsListedMessagesPage
+InteractionStatus = ChatsInteractionStatusResponse
 
 
 @dataclass
@@ -100,7 +104,7 @@ class InteractionConfirmation:
 
 
 def _is_unset(value: Any) -> bool:
-    return isinstance(value, Unset)
+	return isinstance(value, Unset)
 
 
 def _as_str(value: Any) -> str:
@@ -233,6 +237,13 @@ class InteractionSession:
             tool_init=tool_init,
             meta_data=meta_data,
         )
+
+    def status(self) -> InteractionStatus:
+        return self._client.get_interaction_status(self.uuid)
+
+    def is_active(self) -> bool:
+        status = self.status()
+        return False if _is_unset(status.is_active) else bool(status.is_active)
 
 
 class Bot:
@@ -943,6 +954,27 @@ class OpenChatClient:
         if not isinstance(payload, dict):
             raise RuntimeError("rerun_interaction returned non-object response")
         return payload
+
+    def get_interaction_status(self, chat_uuid: str) -> InteractionStatus:
+        self.ensure_authenticated()
+        if not chat_uuid.strip():
+            raise ValueError("chat_uuid is required")
+
+        response = get_api_v1_chats_chat_uuid_status.sync_detailed(chat_uuid=chat_uuid, client=self._api)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "get_interaction_status")
+        if not isinstance(parsed, ChatsInteractionStatusResponse):
+            raise RuntimeError(f"get_interaction_status returned unexpected type: {type(parsed)!r}")
+        return parsed
+
+    def get_shared_interaction_status(self, chat_share_uuid: str) -> InteractionStatus:
+        if not chat_share_uuid.strip():
+            raise ValueError("chat_share_uuid is required")
+
+        response = get_api_interaction_chat_share_uuid_status.sync_detailed(chat_share_uuid=chat_share_uuid, client=self._api)
+        parsed = _expect_ok(response.parsed, int(response.status_code), "get_shared_interaction_status")
+        if not isinstance(parsed, ChatsInteractionStatusResponse):
+            raise RuntimeError(f"get_shared_interaction_status returned unexpected type: {type(parsed)!r}")
+        return parsed
 
     def continue_interaction(
         self,

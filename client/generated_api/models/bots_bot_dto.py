@@ -28,6 +28,7 @@ class BotsBotDTO:
         Attributes:
             bot_contact_token (str | Unset):
             bot_user_uuid (str | Unset):
+            bot_username (str | Unset):
             default_shared_config (BotsBotDTODefaultSharedConfig | Unset):
             description (str | Unset):
             is_active (bool | Unset):
@@ -38,6 +39,7 @@ class BotsBotDTO:
 
     bot_contact_token: str | Unset = UNSET
     bot_user_uuid: str | Unset = UNSET
+    bot_username: str | Unset = UNSET
     default_shared_config: BotsBotDTODefaultSharedConfig | Unset = UNSET
     description: str | Unset = UNSET
     is_active: bool | Unset = UNSET
@@ -55,6 +57,8 @@ class BotsBotDTO:
         bot_contact_token = self.bot_contact_token
 
         bot_user_uuid = self.bot_user_uuid
+
+        bot_username = self.bot_username
 
         default_shared_config: dict[str, Any] | Unset = UNSET
         if not isinstance(self.default_shared_config, Unset):
@@ -79,6 +83,8 @@ class BotsBotDTO:
             field_dict["bot_contact_token"] = bot_contact_token
         if bot_user_uuid is not UNSET:
             field_dict["bot_user_uuid"] = bot_user_uuid
+        if bot_username is not UNSET:
+            field_dict["bot_username"] = bot_username
         if default_shared_config is not UNSET:
             field_dict["default_shared_config"] = default_shared_config
         if description is not UNSET:
@@ -104,6 +110,8 @@ class BotsBotDTO:
 
         bot_user_uuid = d.pop("bot_user_uuid", UNSET)
 
+        bot_username = d.pop("bot_username", UNSET)
+
         _default_shared_config = d.pop("default_shared_config", UNSET)
         default_shared_config: BotsBotDTODefaultSharedConfig | Unset
         if isinstance(_default_shared_config,  Unset):
@@ -127,6 +135,7 @@ class BotsBotDTO:
         bots_bot_dto = cls(
             bot_contact_token=bot_contact_token,
             bot_user_uuid=bot_user_uuid,
+            bot_username=bot_username,
             default_shared_config=default_shared_config,
             description=description,
             is_active=is_active,

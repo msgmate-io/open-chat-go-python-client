@@ -9,33 +9,26 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 from ..types import UNSET, Unset
-from typing import cast
-
-if TYPE_CHECKING:
-  from ..models.bots_bot_interaction_chat_share import BotsBotInteractionChatShare
 
 
 
 
 
-T = TypeVar("T", bound="BotsBotInteractionResponse")
+
+T = TypeVar("T", bound="BotsBotInteractionChatShare")
 
 
 
 @_attrs_define
-class BotsBotInteractionResponse:
+class BotsBotInteractionChatShare:
     """ 
         Attributes:
-            chat_share (BotsBotInteractionChatShare | Unset):
             chat_share_uuid (str | Unset):
             chat_uuid (str | Unset):
-            shared_interaction_url (str | Unset):
      """
 
-    chat_share: BotsBotInteractionChatShare | Unset = UNSET
     chat_share_uuid: str | Unset = UNSET
     chat_uuid: str | Unset = UNSET
-    shared_interaction_url: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -43,30 +36,19 @@ class BotsBotInteractionResponse:
 
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.bots_bot_interaction_chat_share import BotsBotInteractionChatShare
-        chat_share: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.chat_share, Unset):
-            chat_share = self.chat_share.to_dict()
-
         chat_share_uuid = self.chat_share_uuid
 
         chat_uuid = self.chat_uuid
-
-        shared_interaction_url = self.shared_interaction_url
 
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({
         })
-        if chat_share is not UNSET:
-            field_dict["chat_share"] = chat_share
         if chat_share_uuid is not UNSET:
             field_dict["chat_share_uuid"] = chat_share_uuid
         if chat_uuid is not UNSET:
             field_dict["chat_uuid"] = chat_uuid
-        if shared_interaction_url is not UNSET:
-            field_dict["shared_interaction_url"] = shared_interaction_url
 
         return field_dict
 
@@ -74,34 +56,19 @@ class BotsBotInteractionResponse:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.bots_bot_interaction_chat_share import BotsBotInteractionChatShare
         d = dict(src_dict)
-        _chat_share = d.pop("chat_share", UNSET)
-        chat_share: BotsBotInteractionChatShare | Unset
-        if isinstance(_chat_share,  Unset):
-            chat_share = UNSET
-        else:
-            chat_share = BotsBotInteractionChatShare.from_dict(_chat_share)
-
-
-
-
         chat_share_uuid = d.pop("chat_share_uuid", UNSET)
 
         chat_uuid = d.pop("chat_uuid", UNSET)
 
-        shared_interaction_url = d.pop("shared_interaction_url", UNSET)
-
-        bots_bot_interaction_response = cls(
-            chat_share=chat_share,
+        bots_bot_interaction_chat_share = cls(
             chat_share_uuid=chat_share_uuid,
             chat_uuid=chat_uuid,
-            shared_interaction_url=shared_interaction_url,
         )
 
 
-        bots_bot_interaction_response.additional_properties = d
-        return bots_bot_interaction_response
+        bots_bot_interaction_chat_share.additional_properties = d
+        return bots_bot_interaction_chat_share
 
     @property
     def additional_keys(self) -> list[str]:

@@ -1,5 +1,6 @@
 from .client import Bot
 from .client import Interaction
+from .client import InteractionStatus
 from .client import InteractionSession
 from .client import InteractionsPage
 from .client import OpenChatClient
@@ -12,6 +13,7 @@ from .tool_names import ToolName
 __all__ = [
     "Bot",
     "Interaction",
+    "InteractionStatus",
     "InteractionSession",
     "InteractionsPage",
     "OpenChatClient",

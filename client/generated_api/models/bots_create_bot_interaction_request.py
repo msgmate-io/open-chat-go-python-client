@@ -27,11 +27,13 @@ T = TypeVar("T", bound="BotsCreateBotInteractionRequest")
 class BotsCreateBotInteractionRequest:
     """ 
         Attributes:
+            auto_share (bool | Unset):
             config_overrides (BotsCreateBotInteractionRequestConfigOverrides | Unset):
             message (str | Unset):
             tool_init (BotsCreateBotInteractionRequestToolInit | Unset):
      """
 
+    auto_share: bool | Unset = UNSET
     config_overrides: BotsCreateBotInteractionRequestConfigOverrides | Unset = UNSET
     message: str | Unset = UNSET
     tool_init: BotsCreateBotInteractionRequestToolInit | Unset = UNSET
@@ -44,6 +46,8 @@ class BotsCreateBotInteractionRequest:
     def to_dict(self) -> dict[str, Any]:
         from ..models.bots_create_bot_interaction_request_config_overrides import BotsCreateBotInteractionRequestConfigOverrides
         from ..models.bots_create_bot_interaction_request_tool_init import BotsCreateBotInteractionRequestToolInit
+        auto_share = self.auto_share
+
         config_overrides: dict[str, Any] | Unset = UNSET
         if not isinstance(self.config_overrides, Unset):
             config_overrides = self.config_overrides.to_dict()
@@ -59,6 +63,8 @@ class BotsCreateBotInteractionRequest:
         field_dict.update(self.additional_properties)
         field_dict.update({
         })
+        if auto_share is not UNSET:
+            field_dict["auto_share"] = auto_share
         if config_overrides is not UNSET:
             field_dict["config_overrides"] = config_overrides
         if message is not UNSET:
@@ -75,6 +81,8 @@ class BotsCreateBotInteractionRequest:
         from ..models.bots_create_bot_interaction_request_config_overrides import BotsCreateBotInteractionRequestConfigOverrides
         from ..models.bots_create_bot_interaction_request_tool_init import BotsCreateBotInteractionRequestToolInit
         d = dict(src_dict)
+        auto_share = d.pop("auto_share", UNSET)
+
         _config_overrides = d.pop("config_overrides", UNSET)
         config_overrides: BotsCreateBotInteractionRequestConfigOverrides | Unset
         if isinstance(_config_overrides,  Unset):
@@ -98,6 +106,7 @@ class BotsCreateBotInteractionRequest:
 
 
         bots_create_bot_interaction_request = cls(
+            auto_share=auto_share,
             config_overrides=config_overrides,
             message=message,
             tool_init=tool_init,

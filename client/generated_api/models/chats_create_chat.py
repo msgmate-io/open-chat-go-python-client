@@ -28,6 +28,7 @@ class ChatsCreateChat:
     """ 
         Attributes:
             attachments (list[ChatsFileAttachment] | Unset):
+            auto_share (bool | Unset):
             chat_type (str | Unset):
             contact_token (str | Unset):
             first_message (str | Unset):
@@ -35,6 +36,7 @@ class ChatsCreateChat:
      """
 
     attachments: list[ChatsFileAttachment] | Unset = UNSET
+    auto_share: bool | Unset = UNSET
     chat_type: str | Unset = UNSET
     contact_token: str | Unset = UNSET
     first_message: str | Unset = UNSET
@@ -57,6 +59,8 @@ class ChatsCreateChat:
 
 
 
+        auto_share = self.auto_share
+
         chat_type = self.chat_type
 
         contact_token = self.contact_token
@@ -74,6 +78,8 @@ class ChatsCreateChat:
         })
         if attachments is not UNSET:
             field_dict["attachments"] = attachments
+        if auto_share is not UNSET:
+            field_dict["auto_share"] = auto_share
         if chat_type is not UNSET:
             field_dict["chat_type"] = chat_type
         if contact_token is not UNSET:
@@ -104,6 +110,8 @@ class ChatsCreateChat:
                 attachments.append(attachments_item)
 
 
+        auto_share = d.pop("auto_share", UNSET)
+
         chat_type = d.pop("chat_type", UNSET)
 
         contact_token = d.pop("contact_token", UNSET)
@@ -122,6 +130,7 @@ class ChatsCreateChat:
 
         chats_create_chat = cls(
             attachments=attachments,
+            auto_share=auto_share,
             chat_type=chat_type,
             contact_token=contact_token,
             first_message=first_message,

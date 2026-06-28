@@ -14,6 +14,7 @@ from typing import cast
 if TYPE_CHECKING:
   from ..models.chats_file_attachment import ChatsFileAttachment
   from ..models.chats_send_message_meta_data import ChatsSendMessageMetaData
+  from ..models.chats_send_message_tool_init import ChatsSendMessageToolInit
 
 
 
@@ -32,6 +33,7 @@ class ChatsSendMessage:
             reasoning (list[str] | Unset):
             text (str | Unset):
             tool_calls (list[Any] | Unset):
+            tool_init (ChatsSendMessageToolInit | Unset):
      """
 
     attachments: list[ChatsFileAttachment] | Unset = UNSET
@@ -39,6 +41,7 @@ class ChatsSendMessage:
     reasoning: list[str] | Unset = UNSET
     text: str | Unset = UNSET
     tool_calls: list[Any] | Unset = UNSET
+    tool_init: ChatsSendMessageToolInit | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -48,6 +51,7 @@ class ChatsSendMessage:
     def to_dict(self) -> dict[str, Any]:
         from ..models.chats_file_attachment import ChatsFileAttachment
         from ..models.chats_send_message_meta_data import ChatsSendMessageMetaData
+        from ..models.chats_send_message_tool_init import ChatsSendMessageToolInit
         attachments: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.attachments, Unset):
             attachments = []
@@ -75,6 +79,10 @@ class ChatsSendMessage:
 
 
 
+        tool_init: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.tool_init, Unset):
+            tool_init = self.tool_init.to_dict()
+
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -90,6 +98,8 @@ class ChatsSendMessage:
             field_dict["text"] = text
         if tool_calls is not UNSET:
             field_dict["tool_calls"] = tool_calls
+        if tool_init is not UNSET:
+            field_dict["tool_init"] = tool_init
 
         return field_dict
 
@@ -99,6 +109,7 @@ class ChatsSendMessage:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.chats_file_attachment import ChatsFileAttachment
         from ..models.chats_send_message_meta_data import ChatsSendMessageMetaData
+        from ..models.chats_send_message_tool_init import ChatsSendMessageToolInit
         d = dict(src_dict)
         _attachments = d.pop("attachments", UNSET)
         attachments: list[ChatsFileAttachment] | Unset = UNSET
@@ -130,12 +141,23 @@ class ChatsSendMessage:
         tool_calls = cast(list[Any], d.pop("tool_calls", UNSET))
 
 
+        _tool_init = d.pop("tool_init", UNSET)
+        tool_init: ChatsSendMessageToolInit | Unset
+        if isinstance(_tool_init,  Unset):
+            tool_init = UNSET
+        else:
+            tool_init = ChatsSendMessageToolInit.from_dict(_tool_init)
+
+
+
+
         chats_send_message = cls(
             attachments=attachments,
             meta_data=meta_data,
             reasoning=reasoning,
             text=text,
             tool_calls=tool_calls,
+            tool_init=tool_init,
         )
 
 
