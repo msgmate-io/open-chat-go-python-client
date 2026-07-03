@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Optional
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 import httpx
 
@@ -868,7 +868,7 @@ class OpenChatClient:
 
     def list_dynamic_rest_tools(self) -> list[dict[str, Any]]:
         self.ensure_authenticated()
-        response = self._api.get_httpx_client().get("/api/v1/tools/rest")
+        response = self._api.get_httpx_client().get("/api/v1/integrations/rest_api_tool/tools")
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
@@ -881,7 +881,7 @@ class OpenChatClient:
     def create_dynamic_rest_tool(self, definition: dict[str, Any]) -> dict[str, Any]:
         self.ensure_authenticated()
         response = self._api.get_httpx_client().post(
-            "/api/v1/tools/rest",
+            "/api/v1/integrations/rest_api_tool/tools",
             json=_to_plain_data(definition),
         )
         response.raise_for_status()
@@ -910,7 +910,7 @@ class OpenChatClient:
         if not tool_name.strip():
             raise ValueError("tool_name is required")
         response = self._api.get_httpx_client().put(
-            f"/api/v1/tools/rest/{tool_name}",
+            f"/api/v1/integrations/rest_api_tool/tools/{quote(tool_name, safe='')}",
             json=_to_plain_data(definition),
         )
         response.raise_for_status()
@@ -923,7 +923,9 @@ class OpenChatClient:
         self.ensure_authenticated()
         if not tool_name.strip():
             raise ValueError("tool_name is required")
-        response = self._api.get_httpx_client().delete(f"/api/v1/tools/rest/{tool_name}")
+        response = self._api.get_httpx_client().delete(
+            f"/api/v1/integrations/rest_api_tool/tools/{quote(tool_name, safe='')}"
+        )
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
