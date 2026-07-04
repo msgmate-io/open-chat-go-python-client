@@ -578,10 +578,22 @@ class OpenChatClient:
         if overrides:
             effective_overrides.update(_to_plain_data(overrides))
 
+        resolved_tool_init: Optional[dict[str, Any]]
+        if tool_init is not None:
+            resolved_tool_init = _to_plain_data(tool_init)
+            effective_overrides.pop("tool_init", None)
+        else:
+            override_tool_init = effective_overrides.pop("tool_init", None)
+            if isinstance(override_tool_init, dict):
+                resolved_tool_init = _to_plain_data(override_tool_init)
+            else:
+                resolved_tool_init = None
+
         if bot.is_legacy_contact_bot:
             legacy_effective_config = dict(bot.default_config())
             legacy_effective_config.update(effective_overrides)
-            legacy_effective_config["tool_init"] = _to_plain_data(tool_init or {})
+            if resolved_tool_init is not None:
+                legacy_effective_config["tool_init"] = resolved_tool_init
 
             legacy_body = ChatsCreateChat(
                 contact_token=bot.contact_token,
@@ -602,7 +614,11 @@ class OpenChatClient:
 
         body = BotsCreateBotInteractionRequest(
             message=message,
-            tool_init=BotsCreateBotInteractionRequestToolInit.from_dict(_to_plain_data(tool_init or {})),
+            tool_init=(
+                BotsCreateBotInteractionRequestToolInit.from_dict(resolved_tool_init)
+                if resolved_tool_init is not None
+                else UNSET
+            ),
             config_overrides=BotsCreateBotInteractionRequestConfigOverrides.from_dict(effective_overrides),
         )
         if share:
