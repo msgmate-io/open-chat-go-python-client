@@ -34,6 +34,7 @@ class BotsBotDTO:
             is_active (bool | Unset):
             is_public (bool | Unset):
             name (str | Unset):
+            owner_user_uuid (str | Unset):
             uuid (str | Unset):
      """
 
@@ -45,6 +46,7 @@ class BotsBotDTO:
     is_active: bool | Unset = UNSET
     is_public: bool | Unset = UNSET
     name: str | Unset = UNSET
+    owner_user_uuid: str | Unset = UNSET
     uuid: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -72,6 +74,8 @@ class BotsBotDTO:
 
         name = self.name
 
+        owner_user_uuid = self.owner_user_uuid
+
         uuid = self.uuid
 
 
@@ -95,6 +99,8 @@ class BotsBotDTO:
             field_dict["is_public"] = is_public
         if name is not UNSET:
             field_dict["name"] = name
+        if owner_user_uuid is not UNSET:
+            field_dict["owner_user_uuid"] = owner_user_uuid
         if uuid is not UNSET:
             field_dict["uuid"] = uuid
 
@@ -130,6 +136,8 @@ class BotsBotDTO:
 
         name = d.pop("name", UNSET)
 
+        owner_user_uuid = d.pop("owner_user_uuid", UNSET)
+
         uuid = d.pop("uuid", UNSET)
 
         bots_bot_dto = cls(
@@ -141,6 +149,7 @@ class BotsBotDTO:
             is_active=is_active,
             is_public=is_public,
             name=name,
+            owner_user_uuid=owner_user_uuid,
             uuid=uuid,
         )
 

@@ -37,6 +37,11 @@ from .create_confirmable_action_suggestion_call import CreateConfirmableActionSu
 from .create_confirmable_action_suggestion_init import CreateConfirmableActionSuggestionInit
 from .database_message import DatabaseMessage
 from .database_user import DatabaseUser
+from .delete_api_v1_integrations_mcp_servers_server_name_response_200 import DeleteApiV1IntegrationsMcpServersServerNameResponse200
+from .delete_api_v1_integrations_rest_api_tool_tools_tool_name_response_200 import DeleteApiV1IntegrationsRestApiToolToolsToolNameResponse200
+from .get_api_v1_integrations_mcp_servers_response_200 import GetApiV1IntegrationsMcpServersResponse200
+from .get_api_v1_integrations_mcp_servers_server_name_auth_status_response_200 import GetApiV1IntegrationsMcpServersServerNameAuthStatusResponse200
+from .get_api_v1_integrations_rest_api_tool_tools_response_200 import GetApiV1IntegrationsRestApiToolToolsResponse200
 from .get_api_v1_interactions_chat_uuid_tools_response_200 import GetApiV1InteractionsChatUuidToolsResponse200
 from .get_api_v1_interactions_chat_uuid_tools_response_400 import GetApiV1InteractionsChatUuidToolsResponse400
 from .get_api_v1_interactions_chat_uuid_tools_response_403 import GetApiV1InteractionsChatUuidToolsResponse403
@@ -45,15 +50,33 @@ from .get_current_time_call import GetCurrentTimeCall
 from .get_current_time_confirmed_call import GetCurrentTimeConfirmedCall
 from .get_current_time_confirmed_testing_call import GetCurrentTimeConfirmedTestingCall
 from .get_random_number_call import GetRandomNumberCall
+from .get_random_number_seeded_call import GetRandomNumberSeededCall
+from .get_random_number_seeded_init import GetRandomNumberSeededInit
 from .get_weather_call import GetWeatherCall
+from .integrations_integration_api_parameter_overview import IntegrationsIntegrationAPIParameterOverview
+from .integrations_integration_api_route_overview import IntegrationsIntegrationAPIRouteOverview
+from .integrations_integration_frontend_route_overview import IntegrationsIntegrationFrontendRouteOverview
+from .integrations_integration_list_row import IntegrationsIntegrationListRow
+from .integrations_integration_model_field_overview import IntegrationsIntegrationModelFieldOverview
+from .integrations_integration_model_overview import IntegrationsIntegrationModelOverview
+from .integrations_integration_overview_response import IntegrationsIntegrationOverviewResponse
+from .integrations_integrations_list_response import IntegrationsIntegrationsListResponse
 from .models_bot_option import ModelsBotOption
 from .models_model_list_item import ModelsModelListItem
+from .models_model_patch_request import ModelsModelPatchRequest
+from .models_model_upsert_request import ModelsModelUpsertRequest
 from .models_models_filters import ModelsModelsFilters
 from .models_models_list_response import ModelsModelsListResponse
 from .n8n_trigger_workflow_webhook_call import N8NTriggerWorkflowWebhookCall
 from .n8n_trigger_workflow_webhook_call_input_parameters import N8NTriggerWorkflowWebhookCallInputParameters
 from .n8n_trigger_workflow_webhook_init import N8NTriggerWorkflowWebhookInit
 from .post_api_chat_chat_uuid_unpublish_response_200 import PostApiChatChatUuidUnpublishResponse200
+from .post_api_v1_integrations_mcp_servers_response_200 import PostApiV1IntegrationsMcpServersResponse200
+from .post_api_v1_integrations_mcp_servers_server_name_auth_clear_response_200 import PostApiV1IntegrationsMcpServersServerNameAuthClearResponse200
+from .post_api_v1_integrations_mcp_servers_server_name_auth_complete_response_200 import PostApiV1IntegrationsMcpServersServerNameAuthCompleteResponse200
+from .post_api_v1_integrations_mcp_servers_server_name_auth_start_response_200 import PostApiV1IntegrationsMcpServersServerNameAuthStartResponse200
+from .post_api_v1_integrations_mcp_servers_server_name_discover_response_200 import PostApiV1IntegrationsMcpServersServerNameDiscoverResponse200
+from .post_api_v1_integrations_rest_api_tool_tools_response_200 import PostApiV1IntegrationsRestApiToolToolsResponse200
 from .post_api_v1_interactions_chat_uuid_tools_init_response_200 import PostApiV1InteractionsChatUuidToolsInitResponse200
 from .post_api_v1_interactions_chat_uuid_tools_init_response_400 import PostApiV1InteractionsChatUuidToolsInitResponse400
 from .post_api_v1_interactions_chat_uuid_tools_init_response_403 import PostApiV1InteractionsChatUuidToolsInitResponse403
@@ -64,12 +87,21 @@ from .post_api_v1_interactions_chat_uuid_tools_tool_name_response_404 import Pos
 from .post_api_v1_tools_typing_tool_name_call_validate_body import PostApiV1ToolsTypingToolNameCallValidateBody
 from .post_api_v1_tools_typing_tool_name_init_validate_body import PostApiV1ToolsTypingToolNameInitValidateBody
 from .put_api_v1_bots_identifier_config_body import PutApiV1BotsIdentifierConfigBody
+from .put_api_v1_integrations_mcp_servers_server_name_response_200 import PutApiV1IntegrationsMcpServersServerNameResponse200
+from .put_api_v1_integrations_rest_api_tool_tools_tool_name_response_200 import PutApiV1IntegrationsRestApiToolToolsToolNameResponse200
+from .restapitoolintegration_dynamic_rest_tool_detail_response import RestapitoolintegrationDynamicRESTToolDetailResponse
+from .restapitoolintegration_dynamic_rest_tool_detail_response_call_schema import RestapitoolintegrationDynamicRESTToolDetailResponseCallSchema
+from .restapitoolintegration_dynamic_rest_tool_detail_response_init_schema import RestapitoolintegrationDynamicRESTToolDetailResponseInitSchema
+from .restapitoolintegration_dynamic_rest_tool_list_row import RestapitoolintegrationDynamicRESTToolListRow
+from .restapitoolintegration_dynamic_rest_tool_list_row_param_bindings_item import RestapitoolintegrationDynamicRESTToolListRowParamBindingsItem
+from .restapitoolintegration_dynamic_rest_tool_list_row_safety_policy import RestapitoolintegrationDynamicRESTToolListRowSafetyPolicy
+from .restapitoolintegration_dynamic_rest_tool_upsert_request import RestapitoolintegrationDynamicRESTToolUpsertRequest
+from .restapitoolintegration_dynamic_rest_tool_upsert_request_param_bindings_item import RestapitoolintegrationDynamicRESTToolUpsertRequestParamBindingsItem
+from .restapitoolintegration_dynamic_rest_tool_upsert_request_safety_policy import RestapitoolintegrationDynamicRESTToolUpsertRequestSafetyPolicy
 from .run_callback_function_call import RunCallbackFunctionCall
 from .run_callback_function_init import RunCallbackFunctionInit
 from .tool_init_test_tool_pass_through_call import ToolInitTestToolPassThroughCall
 from .tool_init_test_tool_pass_through_init import ToolInitTestToolPassThroughInit
-from .tools_mcp_error import ToolsMCPError
-from .tools_mcp_response import ToolsMCPResponse
 from .tools_store_tool_init_data_request import ToolsStoreToolInitDataRequest
 from .tools_store_tool_init_data_request_init_data import ToolsStoreToolInitDataRequestInitData
 from .tools_tool_execution_request import ToolsToolExecutionRequest
@@ -131,6 +163,11 @@ __all__ = (
     "CreateConfirmableActionSuggestionInit",
     "DatabaseMessage",
     "DatabaseUser",
+    "DeleteApiV1IntegrationsMcpServersServerNameResponse200",
+    "DeleteApiV1IntegrationsRestApiToolToolsToolNameResponse200",
+    "GetApiV1IntegrationsMcpServersResponse200",
+    "GetApiV1IntegrationsMcpServersServerNameAuthStatusResponse200",
+    "GetApiV1IntegrationsRestApiToolToolsResponse200",
     "GetApiV1InteractionsChatUuidToolsResponse200",
     "GetApiV1InteractionsChatUuidToolsResponse400",
     "GetApiV1InteractionsChatUuidToolsResponse403",
@@ -139,15 +176,33 @@ __all__ = (
     "GetCurrentTimeConfirmedCall",
     "GetCurrentTimeConfirmedTestingCall",
     "GetRandomNumberCall",
+    "GetRandomNumberSeededCall",
+    "GetRandomNumberSeededInit",
     "GetWeatherCall",
+    "IntegrationsIntegrationAPIParameterOverview",
+    "IntegrationsIntegrationAPIRouteOverview",
+    "IntegrationsIntegrationFrontendRouteOverview",
+    "IntegrationsIntegrationListRow",
+    "IntegrationsIntegrationModelFieldOverview",
+    "IntegrationsIntegrationModelOverview",
+    "IntegrationsIntegrationOverviewResponse",
+    "IntegrationsIntegrationsListResponse",
     "ModelsBotOption",
     "ModelsModelListItem",
+    "ModelsModelPatchRequest",
     "ModelsModelsFilters",
     "ModelsModelsListResponse",
+    "ModelsModelUpsertRequest",
     "N8NTriggerWorkflowWebhookCall",
     "N8NTriggerWorkflowWebhookCallInputParameters",
     "N8NTriggerWorkflowWebhookInit",
     "PostApiChatChatUuidUnpublishResponse200",
+    "PostApiV1IntegrationsMcpServersResponse200",
+    "PostApiV1IntegrationsMcpServersServerNameAuthClearResponse200",
+    "PostApiV1IntegrationsMcpServersServerNameAuthCompleteResponse200",
+    "PostApiV1IntegrationsMcpServersServerNameAuthStartResponse200",
+    "PostApiV1IntegrationsMcpServersServerNameDiscoverResponse200",
+    "PostApiV1IntegrationsRestApiToolToolsResponse200",
     "PostApiV1InteractionsChatUuidToolsInitResponse200",
     "PostApiV1InteractionsChatUuidToolsInitResponse400",
     "PostApiV1InteractionsChatUuidToolsInitResponse403",
@@ -158,12 +213,21 @@ __all__ = (
     "PostApiV1ToolsTypingToolNameCallValidateBody",
     "PostApiV1ToolsTypingToolNameInitValidateBody",
     "PutApiV1BotsIdentifierConfigBody",
+    "PutApiV1IntegrationsMcpServersServerNameResponse200",
+    "PutApiV1IntegrationsRestApiToolToolsToolNameResponse200",
+    "RestapitoolintegrationDynamicRESTToolDetailResponse",
+    "RestapitoolintegrationDynamicRESTToolDetailResponseCallSchema",
+    "RestapitoolintegrationDynamicRESTToolDetailResponseInitSchema",
+    "RestapitoolintegrationDynamicRESTToolListRow",
+    "RestapitoolintegrationDynamicRESTToolListRowParamBindingsItem",
+    "RestapitoolintegrationDynamicRESTToolListRowSafetyPolicy",
+    "RestapitoolintegrationDynamicRESTToolUpsertRequest",
+    "RestapitoolintegrationDynamicRESTToolUpsertRequestParamBindingsItem",
+    "RestapitoolintegrationDynamicRESTToolUpsertRequestSafetyPolicy",
     "RunCallbackFunctionCall",
     "RunCallbackFunctionInit",
     "ToolInitTestToolPassThroughCall",
     "ToolInitTestToolPassThroughInit",
-    "ToolsMCPError",
-    "ToolsMCPResponse",
     "ToolsStoreToolInitDataRequest",
     "ToolsStoreToolInitDataRequestInitData",
     "ToolsToolExecutionRequest",

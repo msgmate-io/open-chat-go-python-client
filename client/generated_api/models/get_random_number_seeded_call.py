@@ -8,29 +8,27 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
 
 
 
 
 
 
-T = TypeVar("T", bound="ToolsMCPError")
+T = TypeVar("T", bound="GetRandomNumberSeededCall")
 
 
 
 @_attrs_define
-class ToolsMCPError:
-    """ 
+class GetRandomNumberSeededCall:
+    """ The parameters for the tool
+
         Attributes:
-            code (int | Unset):
-            data (Any | Unset):
-            message (str | Unset):
+            max_ (int): The maximum value (inclusive)
+            min_ (int): The minimum value (inclusive)
      """
 
-    code: int | Unset = UNSET
-    data: Any | Unset = UNSET
-    message: str | Unset = UNSET
+    max_: int
+    min_: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -38,23 +36,17 @@ class ToolsMCPError:
 
 
     def to_dict(self) -> dict[str, Any]:
-        code = self.code
+        max_ = self.max_
 
-        data = self.data
-
-        message = self.message
+        min_ = self.min_
 
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({
+            "max": max_,
+            "min": min_,
         })
-        if code is not UNSET:
-            field_dict["code"] = code
-        if data is not UNSET:
-            field_dict["data"] = data
-        if message is not UNSET:
-            field_dict["message"] = message
 
         return field_dict
 
@@ -63,21 +55,18 @@ class ToolsMCPError:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        code = d.pop("code", UNSET)
+        max_ = d.pop("max")
 
-        data = d.pop("data", UNSET)
+        min_ = d.pop("min")
 
-        message = d.pop("message", UNSET)
-
-        tools_mcp_error = cls(
-            code=code,
-            data=data,
-            message=message,
+        get_random_number_seeded_call = cls(
+            max_=max_,
+            min_=min_,
         )
 
 
-        tools_mcp_error.additional_properties = d
-        return tools_mcp_error
+        get_random_number_seeded_call.additional_properties = d
+        return get_random_number_seeded_call
 
     @property
     def additional_keys(self) -> list[str]:

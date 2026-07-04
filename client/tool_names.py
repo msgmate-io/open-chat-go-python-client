@@ -9,6 +9,7 @@ class ToolName(StrEnum):
     GET_CURRENT_TIME_CONFIRMED = 'get_current_time_confirmed'
     GET_CURRENT_TIME_CONFIRMED_TESTING = 'get_current_time_confirmed_testing'
     GET_RANDOM_NUMBER = 'get_random_number'
+    GET_RANDOM_NUMBER_SEEDED = 'get_random_number_seeded'
     GET_WEATHER = 'get_weather'
     N8N_TRIGGER_WORKFLOW_WEBHOOK = 'n8n_trigger_workflow_webhook'
     RUN_CALLBACK_FUNCTION = 'run_callback_function'

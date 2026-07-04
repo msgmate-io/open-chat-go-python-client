@@ -8,7 +8,7 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.tools_tools_list_response import ToolsToolsListResponse
+from ...models.models_models_list_response import ModelsModelsListResponse
 from ...types import UNSET, Unset
 from typing import cast
 
@@ -18,10 +18,11 @@ def _get_kwargs(
     *,
     page: int | Unset = UNSET,
     page_size: int | Unset = UNSET,
-    type_: str | Unset = UNSET,
+    hoster: str | Unset = UNSET,
+    source: str | Unset = UNSET,
     q: str | Unset = UNSET,
-    requires_init: str | Unset = UNSET,
-    requires_confirmation: str | Unset = UNSET,
+    bot: str | Unset = UNSET,
+    bot_uuid: str | Unset = UNSET,
 
 ) -> dict[str, Any]:
     
@@ -34,13 +35,15 @@ def _get_kwargs(
 
     params["page_size"] = page_size
 
-    params["type"] = type_
+    params["hoster"] = hoster
+
+    params["source"] = source
 
     params["q"] = q
 
-    params["requires_init"] = requires_init
+    params["bot"] = bot
 
-    params["requires_confirmation"] = requires_confirmation
+    params["bot_uuid"] = bot_uuid
 
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
@@ -48,7 +51,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/api/v1/tools/list",
+        "url": "/api/v1/models",
         "params": params,
     }
 
@@ -57,9 +60,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ToolsToolsListResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ModelsModelsListResponse | None:
     if response.status_code == 200:
-        response_200 = ToolsToolsListResponse.from_dict(response.json())
+        response_200 = ModelsModelsListResponse.from_dict(response.json())
 
 
 
@@ -71,7 +74,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ToolsToolsListResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ModelsModelsListResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -85,40 +88,43 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     page: int | Unset = UNSET,
     page_size: int | Unset = UNSET,
-    type_: str | Unset = UNSET,
+    hoster: str | Unset = UNSET,
+    source: str | Unset = UNSET,
     q: str | Unset = UNSET,
-    requires_init: str | Unset = UNSET,
-    requires_confirmation: str | Unset = UNSET,
+    bot: str | Unset = UNSET,
+    bot_uuid: str | Unset = UNSET,
 
-) -> Response[ToolsToolsListResponse]:
-    """ List tools
+) -> Response[ModelsModelsListResponse]:
+    """ List models
 
-     List callable tools with pagination and filters. Admin-only tools are only visible to admin users.
+     List public models and caller-owned models. Admin users see all rows.
 
     Args:
         page (int | Unset):
         page_size (int | Unset):
-        type_ (str | Unset):
+        hoster (str | Unset):
+        source (str | Unset):
         q (str | Unset):
-        requires_init (str | Unset):
-        requires_confirmation (str | Unset):
+        bot (str | Unset):
+        bot_uuid (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ToolsToolsListResponse]
+        Response[ModelsModelsListResponse]
      """
 
 
     kwargs = _get_kwargs(
         page=page,
 page_size=page_size,
-type_=type_,
+hoster=hoster,
+source=source,
 q=q,
-requires_init=requires_init,
-requires_confirmation=requires_confirmation,
+bot=bot,
+bot_uuid=bot_uuid,
 
     )
 
@@ -133,30 +139,32 @@ def sync(
     client: AuthenticatedClient | Client,
     page: int | Unset = UNSET,
     page_size: int | Unset = UNSET,
-    type_: str | Unset = UNSET,
+    hoster: str | Unset = UNSET,
+    source: str | Unset = UNSET,
     q: str | Unset = UNSET,
-    requires_init: str | Unset = UNSET,
-    requires_confirmation: str | Unset = UNSET,
+    bot: str | Unset = UNSET,
+    bot_uuid: str | Unset = UNSET,
 
-) -> ToolsToolsListResponse | None:
-    """ List tools
+) -> ModelsModelsListResponse | None:
+    """ List models
 
-     List callable tools with pagination and filters. Admin-only tools are only visible to admin users.
+     List public models and caller-owned models. Admin users see all rows.
 
     Args:
         page (int | Unset):
         page_size (int | Unset):
-        type_ (str | Unset):
+        hoster (str | Unset):
+        source (str | Unset):
         q (str | Unset):
-        requires_init (str | Unset):
-        requires_confirmation (str | Unset):
+        bot (str | Unset):
+        bot_uuid (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ToolsToolsListResponse
+        ModelsModelsListResponse
      """
 
 
@@ -164,10 +172,11 @@ def sync(
         client=client,
 page=page,
 page_size=page_size,
-type_=type_,
+hoster=hoster,
+source=source,
 q=q,
-requires_init=requires_init,
-requires_confirmation=requires_confirmation,
+bot=bot,
+bot_uuid=bot_uuid,
 
     ).parsed
 
@@ -176,40 +185,43 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     page: int | Unset = UNSET,
     page_size: int | Unset = UNSET,
-    type_: str | Unset = UNSET,
+    hoster: str | Unset = UNSET,
+    source: str | Unset = UNSET,
     q: str | Unset = UNSET,
-    requires_init: str | Unset = UNSET,
-    requires_confirmation: str | Unset = UNSET,
+    bot: str | Unset = UNSET,
+    bot_uuid: str | Unset = UNSET,
 
-) -> Response[ToolsToolsListResponse]:
-    """ List tools
+) -> Response[ModelsModelsListResponse]:
+    """ List models
 
-     List callable tools with pagination and filters. Admin-only tools are only visible to admin users.
+     List public models and caller-owned models. Admin users see all rows.
 
     Args:
         page (int | Unset):
         page_size (int | Unset):
-        type_ (str | Unset):
+        hoster (str | Unset):
+        source (str | Unset):
         q (str | Unset):
-        requires_init (str | Unset):
-        requires_confirmation (str | Unset):
+        bot (str | Unset):
+        bot_uuid (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ToolsToolsListResponse]
+        Response[ModelsModelsListResponse]
      """
 
 
     kwargs = _get_kwargs(
         page=page,
 page_size=page_size,
-type_=type_,
+hoster=hoster,
+source=source,
 q=q,
-requires_init=requires_init,
-requires_confirmation=requires_confirmation,
+bot=bot,
+bot_uuid=bot_uuid,
 
     )
 
@@ -224,30 +236,32 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     page: int | Unset = UNSET,
     page_size: int | Unset = UNSET,
-    type_: str | Unset = UNSET,
+    hoster: str | Unset = UNSET,
+    source: str | Unset = UNSET,
     q: str | Unset = UNSET,
-    requires_init: str | Unset = UNSET,
-    requires_confirmation: str | Unset = UNSET,
+    bot: str | Unset = UNSET,
+    bot_uuid: str | Unset = UNSET,
 
-) -> ToolsToolsListResponse | None:
-    """ List tools
+) -> ModelsModelsListResponse | None:
+    """ List models
 
-     List callable tools with pagination and filters. Admin-only tools are only visible to admin users.
+     List public models and caller-owned models. Admin users see all rows.
 
     Args:
         page (int | Unset):
         page_size (int | Unset):
-        type_ (str | Unset):
+        hoster (str | Unset):
+        source (str | Unset):
         q (str | Unset):
-        requires_init (str | Unset):
-        requires_confirmation (str | Unset):
+        bot (str | Unset):
+        bot_uuid (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ToolsToolsListResponse
+        ModelsModelsListResponse
      """
 
 
@@ -255,9 +269,10 @@ async def asyncio(
         client=client,
 page=page,
 page_size=page_size,
-type_=type_,
+hoster=hoster,
+source=source,
 q=q,
-requires_init=requires_init,
-requires_confirmation=requires_confirmation,
+bot=bot,
+bot_uuid=bot_uuid,
 
     )).parsed

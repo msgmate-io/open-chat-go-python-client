@@ -16,40 +16,26 @@ from typing import cast
 
 
 
-T = TypeVar("T", bound="ModelsModelListItem")
+T = TypeVar("T", bound="ModelsModelPatchRequest")
 
 
 
 @_attrs_define
-class ModelsModelListItem:
+class ModelsModelPatchRequest:
     """ 
         Attributes:
-            bots (list[str] | Unset):
             configuration (list[int] | Unset):
             description (str | Unset):
-            hoster (str | Unset):
-            is_default (bool | Unset):
-            is_owned (bool | Unset):
             is_public (bool | Unset):
             model_id (str | Unset):
-            owner_user_id (int | Unset):
-            source (str | Unset):
             title (str | Unset):
-            uuid (str | Unset):
      """
 
-    bots: list[str] | Unset = UNSET
     configuration: list[int] | Unset = UNSET
     description: str | Unset = UNSET
-    hoster: str | Unset = UNSET
-    is_default: bool | Unset = UNSET
-    is_owned: bool | Unset = UNSET
     is_public: bool | Unset = UNSET
     model_id: str | Unset = UNSET
-    owner_user_id: int | Unset = UNSET
-    source: str | Unset = UNSET
     title: str | Unset = UNSET
-    uuid: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -57,12 +43,6 @@ class ModelsModelListItem:
 
 
     def to_dict(self) -> dict[str, Any]:
-        bots: list[str] | Unset = UNSET
-        if not isinstance(self.bots, Unset):
-            bots = self.bots
-
-
-
         configuration: list[int] | Unset = UNSET
         if not isinstance(self.configuration, Unset):
             configuration = self.configuration
@@ -71,53 +51,27 @@ class ModelsModelListItem:
 
         description = self.description
 
-        hoster = self.hoster
-
-        is_default = self.is_default
-
-        is_owned = self.is_owned
-
         is_public = self.is_public
 
         model_id = self.model_id
 
-        owner_user_id = self.owner_user_id
-
-        source = self.source
-
         title = self.title
-
-        uuid = self.uuid
 
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({
         })
-        if bots is not UNSET:
-            field_dict["bots"] = bots
         if configuration is not UNSET:
             field_dict["configuration"] = configuration
         if description is not UNSET:
             field_dict["description"] = description
-        if hoster is not UNSET:
-            field_dict["hoster"] = hoster
-        if is_default is not UNSET:
-            field_dict["is_default"] = is_default
-        if is_owned is not UNSET:
-            field_dict["is_owned"] = is_owned
         if is_public is not UNSET:
             field_dict["is_public"] = is_public
         if model_id is not UNSET:
             field_dict["model_id"] = model_id
-        if owner_user_id is not UNSET:
-            field_dict["owner_user_id"] = owner_user_id
-        if source is not UNSET:
-            field_dict["source"] = source
         if title is not UNSET:
             field_dict["title"] = title
-        if uuid is not UNSET:
-            field_dict["uuid"] = uuid
 
         return field_dict
 
@@ -126,50 +80,28 @@ class ModelsModelListItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        bots = cast(list[str], d.pop("bots", UNSET))
-
-
         configuration = cast(list[int], d.pop("configuration", UNSET))
 
 
         description = d.pop("description", UNSET)
 
-        hoster = d.pop("hoster", UNSET)
-
-        is_default = d.pop("is_default", UNSET)
-
-        is_owned = d.pop("is_owned", UNSET)
-
         is_public = d.pop("is_public", UNSET)
 
         model_id = d.pop("model_id", UNSET)
 
-        owner_user_id = d.pop("owner_user_id", UNSET)
-
-        source = d.pop("source", UNSET)
-
         title = d.pop("title", UNSET)
 
-        uuid = d.pop("uuid", UNSET)
-
-        models_model_list_item = cls(
-            bots=bots,
+        models_model_patch_request = cls(
             configuration=configuration,
             description=description,
-            hoster=hoster,
-            is_default=is_default,
-            is_owned=is_owned,
             is_public=is_public,
             model_id=model_id,
-            owner_user_id=owner_user_id,
-            source=source,
             title=title,
-            uuid=uuid,
         )
 
 
-        models_model_list_item.additional_properties = d
-        return models_model_list_item
+        models_model_patch_request.additional_properties = d
+        return models_model_patch_request
 
     @property
     def additional_keys(self) -> list[str]:
