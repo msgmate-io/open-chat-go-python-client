@@ -41,6 +41,7 @@ from .delete_api_v1_integrations_mcp_servers_server_name_response_200 import Del
 from .delete_api_v1_integrations_rest_api_tool_tools_tool_name_response_200 import DeleteApiV1IntegrationsRestApiToolToolsToolNameResponse200
 from .get_api_v1_integrations_mcp_servers_response_200 import GetApiV1IntegrationsMcpServersResponse200
 from .get_api_v1_integrations_mcp_servers_server_name_auth_status_response_200 import GetApiV1IntegrationsMcpServersServerNameAuthStatusResponse200
+from .get_api_v1_integrations_mcp_templates_response_200 import GetApiV1IntegrationsMcpTemplatesResponse200
 from .get_api_v1_integrations_rest_api_tool_tools_response_200 import GetApiV1IntegrationsRestApiToolToolsResponse200
 from .get_api_v1_interactions_chat_uuid_tools_response_200 import GetApiV1InteractionsChatUuidToolsResponse200
 from .get_api_v1_interactions_chat_uuid_tools_response_400 import GetApiV1InteractionsChatUuidToolsResponse400
@@ -60,6 +61,7 @@ from .integrations_integration_list_row import IntegrationsIntegrationListRow
 from .integrations_integration_model_field_overview import IntegrationsIntegrationModelFieldOverview
 from .integrations_integration_model_overview import IntegrationsIntegrationModelOverview
 from .integrations_integration_overview_response import IntegrationsIntegrationOverviewResponse
+from .integrations_integration_runtime_env_var_overview import IntegrationsIntegrationRuntimeEnvVarOverview
 from .integrations_integrations_list_response import IntegrationsIntegrationsListResponse
 from .models_bot_option import ModelsBotOption
 from .models_model_list_item import ModelsModelListItem
@@ -167,6 +169,7 @@ __all__ = (
     "DeleteApiV1IntegrationsRestApiToolToolsToolNameResponse200",
     "GetApiV1IntegrationsMcpServersResponse200",
     "GetApiV1IntegrationsMcpServersServerNameAuthStatusResponse200",
+    "GetApiV1IntegrationsMcpTemplatesResponse200",
     "GetApiV1IntegrationsRestApiToolToolsResponse200",
     "GetApiV1InteractionsChatUuidToolsResponse200",
     "GetApiV1InteractionsChatUuidToolsResponse400",
@@ -186,6 +189,7 @@ __all__ = (
     "IntegrationsIntegrationModelFieldOverview",
     "IntegrationsIntegrationModelOverview",
     "IntegrationsIntegrationOverviewResponse",
+    "IntegrationsIntegrationRuntimeEnvVarOverview",
     "IntegrationsIntegrationsListResponse",
     "ModelsBotOption",
     "ModelsModelListItem",

@@ -28,6 +28,7 @@ class DatabaseUser:
             is_automated (bool | Unset):
             name (str | Unset):
             two_factor_enabled (bool | Unset):
+            username (str | Unset):
             uuid (str | Unset):
      """
 
@@ -36,6 +37,7 @@ class DatabaseUser:
     is_automated: bool | Unset = UNSET
     name: str | Unset = UNSET
     two_factor_enabled: bool | Unset = UNSET
+    username: str | Unset = UNSET
     uuid: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -54,6 +56,8 @@ class DatabaseUser:
 
         two_factor_enabled = self.two_factor_enabled
 
+        username = self.username
+
         uuid = self.uuid
 
 
@@ -71,6 +75,8 @@ class DatabaseUser:
             field_dict["name"] = name
         if two_factor_enabled is not UNSET:
             field_dict["two_factor_enabled"] = two_factor_enabled
+        if username is not UNSET:
+            field_dict["username"] = username
         if uuid is not UNSET:
             field_dict["uuid"] = uuid
 
@@ -91,6 +97,8 @@ class DatabaseUser:
 
         two_factor_enabled = d.pop("two_factor_enabled", UNSET)
 
+        username = d.pop("username", UNSET)
+
         uuid = d.pop("uuid", UNSET)
 
         database_user = cls(
@@ -99,6 +107,7 @@ class DatabaseUser:
             is_automated=is_automated,
             name=name,
             two_factor_enabled=two_factor_enabled,
+            username=username,
             uuid=uuid,
         )
 

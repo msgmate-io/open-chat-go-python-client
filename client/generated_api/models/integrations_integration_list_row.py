@@ -23,20 +23,26 @@ T = TypeVar("T", bound="IntegrationsIntegrationListRow")
 class IntegrationsIntegrationListRow:
     """ 
         Attributes:
+            admin_only (bool | Unset):
             api_route_count (int | Unset):
             frontend_route_count (int | Unset):
             function_count (int | Unset):
             has_route_registrar (bool | Unset):
             model_provider_count (int | Unset):
             name (str | Unset):
+            runtime_env_var_count (int | Unset):
+            user_accessible (bool | Unset):
      """
 
+    admin_only: bool | Unset = UNSET
     api_route_count: int | Unset = UNSET
     frontend_route_count: int | Unset = UNSET
     function_count: int | Unset = UNSET
     has_route_registrar: bool | Unset = UNSET
     model_provider_count: int | Unset = UNSET
     name: str | Unset = UNSET
+    runtime_env_var_count: int | Unset = UNSET
+    user_accessible: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -44,6 +50,8 @@ class IntegrationsIntegrationListRow:
 
 
     def to_dict(self) -> dict[str, Any]:
+        admin_only = self.admin_only
+
         api_route_count = self.api_route_count
 
         frontend_route_count = self.frontend_route_count
@@ -56,11 +64,17 @@ class IntegrationsIntegrationListRow:
 
         name = self.name
 
+        runtime_env_var_count = self.runtime_env_var_count
+
+        user_accessible = self.user_accessible
+
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({
         })
+        if admin_only is not UNSET:
+            field_dict["admin_only"] = admin_only
         if api_route_count is not UNSET:
             field_dict["api_route_count"] = api_route_count
         if frontend_route_count is not UNSET:
@@ -73,6 +87,10 @@ class IntegrationsIntegrationListRow:
             field_dict["model_provider_count"] = model_provider_count
         if name is not UNSET:
             field_dict["name"] = name
+        if runtime_env_var_count is not UNSET:
+            field_dict["runtime_env_var_count"] = runtime_env_var_count
+        if user_accessible is not UNSET:
+            field_dict["user_accessible"] = user_accessible
 
         return field_dict
 
@@ -81,6 +99,8 @@ class IntegrationsIntegrationListRow:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        admin_only = d.pop("admin_only", UNSET)
+
         api_route_count = d.pop("api_route_count", UNSET)
 
         frontend_route_count = d.pop("frontend_route_count", UNSET)
@@ -93,13 +113,20 @@ class IntegrationsIntegrationListRow:
 
         name = d.pop("name", UNSET)
 
+        runtime_env_var_count = d.pop("runtime_env_var_count", UNSET)
+
+        user_accessible = d.pop("user_accessible", UNSET)
+
         integrations_integration_list_row = cls(
+            admin_only=admin_only,
             api_route_count=api_route_count,
             frontend_route_count=frontend_route_count,
             function_count=function_count,
             has_route_registrar=has_route_registrar,
             model_provider_count=model_provider_count,
             name=name,
+            runtime_env_var_count=runtime_env_var_count,
+            user_accessible=user_accessible,
         )
 
 

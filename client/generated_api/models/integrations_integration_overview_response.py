@@ -15,6 +15,7 @@ if TYPE_CHECKING:
   from ..models.integrations_integration_api_route_overview import IntegrationsIntegrationAPIRouteOverview
   from ..models.integrations_integration_frontend_route_overview import IntegrationsIntegrationFrontendRouteOverview
   from ..models.integrations_integration_model_overview import IntegrationsIntegrationModelOverview
+  from ..models.integrations_integration_runtime_env_var_overview import IntegrationsIntegrationRuntimeEnvVarOverview
 
 
 
@@ -35,6 +36,7 @@ class IntegrationsIntegrationOverviewResponse:
             models (list[IntegrationsIntegrationModelOverview] | Unset):
             name (str | Unset):
             readme_markdown (str | Unset):
+            runtime_env_vars (list[IntegrationsIntegrationRuntimeEnvVarOverview] | Unset):
      """
 
     api_routes: list[str] | Unset = UNSET
@@ -44,6 +46,7 @@ class IntegrationsIntegrationOverviewResponse:
     models: list[IntegrationsIntegrationModelOverview] | Unset = UNSET
     name: str | Unset = UNSET
     readme_markdown: str | Unset = UNSET
+    runtime_env_vars: list[IntegrationsIntegrationRuntimeEnvVarOverview] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -54,6 +57,7 @@ class IntegrationsIntegrationOverviewResponse:
         from ..models.integrations_integration_api_route_overview import IntegrationsIntegrationAPIRouteOverview
         from ..models.integrations_integration_frontend_route_overview import IntegrationsIntegrationFrontendRouteOverview
         from ..models.integrations_integration_model_overview import IntegrationsIntegrationModelOverview
+        from ..models.integrations_integration_runtime_env_var_overview import IntegrationsIntegrationRuntimeEnvVarOverview
         api_routes: list[str] | Unset = UNSET
         if not isinstance(self.api_routes, Unset):
             api_routes = self.api_routes
@@ -97,6 +101,15 @@ class IntegrationsIntegrationOverviewResponse:
 
         readme_markdown = self.readme_markdown
 
+        runtime_env_vars: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.runtime_env_vars, Unset):
+            runtime_env_vars = []
+            for runtime_env_vars_item_data in self.runtime_env_vars:
+                runtime_env_vars_item = runtime_env_vars_item_data.to_dict()
+                runtime_env_vars.append(runtime_env_vars_item)
+
+
+
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -116,6 +129,8 @@ class IntegrationsIntegrationOverviewResponse:
             field_dict["name"] = name
         if readme_markdown is not UNSET:
             field_dict["readme_markdown"] = readme_markdown
+        if runtime_env_vars is not UNSET:
+            field_dict["runtime_env_vars"] = runtime_env_vars
 
         return field_dict
 
@@ -126,6 +141,7 @@ class IntegrationsIntegrationOverviewResponse:
         from ..models.integrations_integration_api_route_overview import IntegrationsIntegrationAPIRouteOverview
         from ..models.integrations_integration_frontend_route_overview import IntegrationsIntegrationFrontendRouteOverview
         from ..models.integrations_integration_model_overview import IntegrationsIntegrationModelOverview
+        from ..models.integrations_integration_runtime_env_var_overview import IntegrationsIntegrationRuntimeEnvVarOverview
         d = dict(src_dict)
         api_routes = cast(list[str], d.pop("api_routes", UNSET))
 
@@ -173,6 +189,18 @@ class IntegrationsIntegrationOverviewResponse:
 
         readme_markdown = d.pop("readme_markdown", UNSET)
 
+        _runtime_env_vars = d.pop("runtime_env_vars", UNSET)
+        runtime_env_vars: list[IntegrationsIntegrationRuntimeEnvVarOverview] | Unset = UNSET
+        if _runtime_env_vars is not UNSET:
+            runtime_env_vars = []
+            for runtime_env_vars_item_data in _runtime_env_vars:
+                runtime_env_vars_item = IntegrationsIntegrationRuntimeEnvVarOverview.from_dict(runtime_env_vars_item_data)
+
+
+
+                runtime_env_vars.append(runtime_env_vars_item)
+
+
         integrations_integration_overview_response = cls(
             api_routes=api_routes,
             api_routes_overview=api_routes_overview,
@@ -181,6 +209,7 @@ class IntegrationsIntegrationOverviewResponse:
             models=models,
             name=name,
             readme_markdown=readme_markdown,
+            runtime_env_vars=runtime_env_vars,
         )
 
 
