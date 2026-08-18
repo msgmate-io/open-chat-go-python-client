@@ -34,7 +34,7 @@ bot = client.create_bot(
     name="support_agent",
     description="Customer support helper",
     default_shared_config={
-        "model": "qwen3-8b-instruct_vllm",
+        "model": "qwen3-4b-instruct-2507_vllm",
         "backend": "litellm",
         "endpoint": "https://litellm.t1m.me/v1",
         "temperature": 0.2,
