@@ -222,6 +222,9 @@ class InteractionSession:
         self._shared_interaction_url = f"{self._client.base_url}/interaction/{share_uuid}"
         return self._shared_interaction_url
 
+    def badge_svg_url(self) -> str:
+        return f"{self.shared_url()}/badge.svg"
+
     def re_run(self, message_uuid: str | None = None) -> dict[str, Any]:
         return self._client.rerun_interaction(self.uuid, message_uuid=message_uuid)
 
@@ -1052,8 +1055,11 @@ def main() -> None:
     print(f"Logged in as: {_as_str(user.name) or 'unknown'}")
 
     bot = client.get_bot(args.bot)
-    interaction = bot.create_interaction(message=args.message)
+    interaction = bot.create_interaction(message=args.message, share=True)
     print(f"Created interaction chat: {interaction.uuid}")
+    if interaction.shared_url():
+        print(f"Shared interaction url: {interaction.shared_url()}")
+        print(f"Badge svg url: {interaction.badge_svg_url()}")
 
 
 if __name__ == "__main__":
