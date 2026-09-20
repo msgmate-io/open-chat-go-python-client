@@ -6,7 +6,7 @@ setup(
     version="0.1",
     packages=find_packages(),
     python_requires=">=3.10, <4",
-    license="LGPL-3.0-or-later",
+    license="AGPL-3.0-or-later",
     install_requires=[
         "attrs>=22.2.0",
         "httpx>=0.28,<0.29",
@@ -20,6 +20,6 @@ setup(
     },
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     ],
 )
